@@ -109,7 +109,7 @@ jobs:
             # Puts the washi command on the PATH (usable from a terminal or an AI agent)
             binary "#{appdir}/Washi.app/Contents/MacOS/washi"
 
-            # Not signed or notarized (ad-hoc signature): remove the quarantine attribute Homebrew adds, to avoid the first-launch warning
+            # Unsigned (ad-hoc): drop the quarantine attribute Homebrew adds, to avoid the first-launch warning
             postflight_steps do
               run "/usr/bin/xattr",
                   args:           ["-dr", "com.apple.quarantine", "{{appdir}}/Washi.app"],
