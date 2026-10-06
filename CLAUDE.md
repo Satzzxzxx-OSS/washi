@@ -64,7 +64,7 @@ pnpm dev
 
 ## 注意点
 
-- アイコンは `python3 scripts/make_logo.py --font <Zen Old Mincho の .ttf> --all` で `app-icon.svg`・`docs/assets/logo.svg`（README 用）・`docs/favicon.svg` を作り、`pnpm tauri icon app-icon.svg --output <一時フォルダ>` で作った PNG/ICNS/ICO のうち、`src-tauri/icons/` に既にある名前のものだけを入れ替える（iOS・Android 用は使わない）。
+- アイコンは `python3 scripts/make_logo.py --all` で `app-icon.svg`・`docs/assets/logo.svg`（README 用）・`docs/favicon.svg` を作り、`pnpm tauri icon app-icon.svg --output <一時フォルダ>` で作った PNG/ICNS/ICO のうち、`src-tauri/icons/` に既にある名前のものだけを入れ替える（iOS・Android 用は使わない）。
 - Finder への登録拡張子は `src-tauri/tauri.conf.json` の `bundle.fileAssociations`。形式を足したら、ここにも足す（`src-tauri/src/lib.rs` のテストが、`supported_extensions()` との不一致を検出する）。
 - Tauri の権限は `src-tauri/capabilities/` と `tauri.conf.json` で管理。新しいプラグイン API を使うときは capability の追加が必要。
 - `examples/` は各形式の実文書に近いサンプルで、`dump` テストの入力にもなる。
