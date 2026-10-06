@@ -58,12 +58,13 @@ pnpm dev
 ## CI とリリース
 
 - `.github/workflows/ci.yml`: `washi-core` のテスト（Linux、Tauri なし）とアプリ全体のテスト・ビルド（macOS）。毎回は走らせない方針なので、手動実行（`workflow_dispatch`）のみ。
-- `.github/workflows/release.yml`: GitHub Release を公開（publish）すると起動する（`gh release create v0.1.0 --generate-notes` など）。そのタグを checkout し、タグが `v<major>.<minor>.<patch>` の形で、`package.json` / `tauri.conf.json` / `src-tauri/Cargo.toml` のバージョンと一致しないと失敗する。`pnpm release` で `.app` を作り、`Washi-<version>-aarch64.zip` と `.sha256` を、公開済みの Release に `gh release upload` で添付し、`kiwamizamurai/homebrew-tap` の `Casks/washi.rb` を生成して push する（secret `HOMEBREW_TAP_TOKEN` が必要）。Actions から `tag` を指定して手動で再実行もできる。
+- `.github/workflows/release.yml`: GitHub Release を公開（publish）すると起動する（`gh release create v0.1.0 --generate-notes` など）。そのタグを checkout し、タグが `v<major>.<minor>.<patch>` の形で、`package.json` / `tauri.conf.json` / `src-tauri/Cargo.toml` のバージョンと一致しないと失敗する。`pnpm release` で `.app` を作り、`Washi-<version>-aarch64.zip` と `.sha256` を、公開済みの Release に `gh release upload` で添付し、`kiwamizamurai/homebrew-tap` の `Casks/washi.rb` を生成して push する（secret `HOMEBREW_TAP_TOKEN` が必要。未設定なら、この tap の更新だけ警告を出して飛ばす）。Actions から `tag` を指定して手動で再実行もできる。
 - 配布は Apple Silicon の macOS のみ。ad-hoc 署名なので Cask の `postflight` で quarantine を外している。LaTeX エンジンは同梱せず、Cask の `depends_on formula: "tectonic"` で入れる。
 - ワークフローはまだ GitHub 上で実行していない（Cask 生成部分だけローカルで再現して構文を確認した）。
 
 ## 注意点
 
+- アイコンは `python3 scripts/make_logo.py --font <Zen Old Mincho の .ttf> --all` で `app-icon.svg`・`docs/assets/logo.svg`（README 用）・`docs/favicon.svg` を作り、`pnpm tauri icon app-icon.svg --output <一時フォルダ>` で作った PNG/ICNS/ICO のうち、`src-tauri/icons/` に既にある名前のものだけを入れ替える（iOS・Android 用は使わない）。
 - Finder への登録拡張子は `src-tauri/tauri.conf.json` の `bundle.fileAssociations`。形式を足したら、ここにも足す（`src-tauri/src/lib.rs` のテストが、`supported_extensions()` との不一致を検出する）。
 - Tauri の権限は `src-tauri/capabilities/` と `tauri.conf.json` で管理。新しいプラグイン API を使うときは capability の追加が必要。
 - `examples/` は各形式の実文書に近いサンプルで、`dump` テストの入力にもなる。

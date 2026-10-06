@@ -4,7 +4,12 @@
 漉きの不揃いな縁をもつ和紙の上に、朱の落款（「和」を白抜き）を押したもの。
 紙の繊維、縁の揺らぎ、朱のかすれは乱数（--seed）で決まるので、同じ引数なら同じ絵になる。
 
-    python3 scripts/make_logo.py --font ZenOldMincho-Black.ttf --out docs/assets/logo.svg
+    python3 scripts/make_logo.py --font ZenOldMincho-Black.ttf --all
+
+--all は、同じ絵から次の 3 つを作る。
+    app-icon.svg        1024px。アプリのアイコン一式（pnpm tauri icon app-icon.svg）の元
+    docs/assets/logo.svg  160px。README に Markdown の画像として載せる大きさ
+    docs/favicon.svg    繊維なしの軽い版。ランディングの favicon
 
 必要なもの: fontTools（pip install fonttools）と、文字の形を借りる日本語フォント。
 フォントはリポジトリに入れない。文字は SVG のパスとして書き出すので、見る側にフォントは要らない。
@@ -113,7 +118,7 @@ def specks(rng, cx, cy, half, count):
     return "\n        ".join(parts)
 
 
-def build(font_path, char, seed, shown):
+def build(font_path, char, seed, shown, fiber_count=230):
     rng = random.Random(seed)
     middle = SIZE / 2
 
@@ -151,7 +156,7 @@ def build(font_path, char, seed, shown):
   <g clip-path="url(#sheet)">
     <rect width="{SIZE}" height="{SIZE}" fill="url(#vignette)"/>
     <g fill="none" stroke-linecap="round">
-      {fibers(rng, 230, 40)}
+      {fibers(rng, fiber_count, 40)}
     </g>
   </g>
 
@@ -168,15 +173,24 @@ def build(font_path, char, seed, shown):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--font", required=True, help="文字の形を借りる日本語フォント（.ttf / .otf）")
-    parser.add_argument("--out", default="docs/assets/logo.svg")
+    parser.add_argument("--all", action="store_true", help="app-icon.svg・docs/assets/logo.svg・docs/favicon.svg をまとめて作る")
+    parser.add_argument("--out", default="docs/assets/logo.svg", help="--all を使わないときの出力先")
     parser.add_argument("--char", default="和")
-    parser.add_argument("--size", type=int, default=160, help="表示サイズ（px）。README の Markdown 画像はこの大きさで出る")
+    parser.add_argument("--size", type=int, default=160, help="表示サイズ（px）。--all を使わないときだけ効く")
+    parser.add_argument("--fibers", type=int, default=230, help="紙の繊維の本数。--all を使わないときだけ効く")
     parser.add_argument("--seed", type=int, default=7, help="繊維・縁・かすれの乱数の種")
     args = parser.parse_args()
-    out = Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(build(args.font, args.char, args.seed, args.size), encoding="utf-8")
-    print(f"wrote {out} ({out.stat().st_size // 1024} KB)")
+
+    root = Path(__file__).resolve().parent.parent
+    jobs = (
+        [(root / "app-icon.svg", 1024, 230), (root / "docs/assets/logo.svg", 160, 230), (root / "docs/favicon.svg", 160, 0)]
+        if args.all
+        else [(Path(args.out), args.size, args.fibers)]
+    )
+    for out, size, fiber_count in jobs:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(build(args.font, args.char, args.seed, size, fiber_count), encoding="utf-8")
+        print(f"wrote {out} ({out.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":
