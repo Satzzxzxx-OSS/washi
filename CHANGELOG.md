@@ -1,0 +1,20 @@
+# Changelog
+
+All notable changes are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to follow [Semantic Versioning](https://semver.org/) from 1.0.0.
+
+The `washi` command-line interface (the `--json` output, exit codes, and the stdout / stderr split) is a public contract; see "For AI agents" in the [README](README.md). Any change that is not purely additive raises `format_version` and is listed here before it ships.
+
+## [Unreleased]
+
+### Added
+- The `washi` CLI contract: every `--json` document carries `format_version` (`1`); failures are a JSON object on stderr with machine-readable `errors[].kind`; success is a JSON object on stdout. Exit codes: `0` success, `1` the app could not be launched, `2` invalid usage or files.
+- `files[].format` (`markdown`, `mermaid`, `typst`, `latex`, `pdf`) in the `--json` result, and `formats` plus a sorted `extensions` in `washi formats --json`.
+- Re-rendering when files a document includes change: LaTeX `\input` / `\include` / `\bibliography` / `\addbibresource` / `\includegraphics`, Typst `#include` / `#import` / `#image` / `#bibliography` and data files, and Markdown images, including those in subfolders.
+- LaTeX builds stop after `WASHI_COMPILE_TIMEOUT` seconds (default 300), including the processes they started, and a newer render of the same file stops an older one.
+- Finder registration for `.mmd`, `.mermaid`, `.pdf`, `.latex` and `.mdown`.
+- GitHub Actions: CI (`ci.yml`) and a release workflow (`release.yml`) that publishes a GitHub Release and updates the Homebrew tap.
+
+### Changed
+- `washi --json` results list `files` (each with `path` and `format`) instead of `opened`.
+- `washi formats` and `washi install` reject unknown options, and `-` may be given only once.
+- Rendering and the CLI moved into the `washi-core` crate, which does not depend on Tauri.

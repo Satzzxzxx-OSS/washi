@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Washi — a quiet viewer for Markdown, Typst and LaTeX</title>
+    <meta
+      name="description"
+      content="A lightweight viewer that re-renders on every save, for reading Markdown, Typst, LaTeX, Mermaid and PDF. Built with Tauri + Rust, MIT licensed."
+    />
+    <meta name="theme-color" content="#fbf9f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1917" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content="Washi (和紙)" />
+    <meta property="og:description" content="Read Markdown, Typst and LaTeX quietly, re-rendered on every save." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="../assets/shot-markdown-light.jpg" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang="ja" href="../" />
+    <link rel="alternate" hreflang="en" href="./" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        color-scheme: light dark;
+        --paper: #fbf9f4;
+        --paper-2: #f3efe5;
+        --ink: #2b2a27;
+        --muted: #6f6b61;
+        --rule: #e3dfd3;
+        --accent: #b5483a;
+        --accent-ink: #fff;
+        --shadow: 0 30px 80px -30px rgb(60 40 20 / 0.35), 0 8px 24px -12px rgb(60 40 20 / 0.25);
+        --serif: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+        --sans: "Zen Kaku Gothic New", -apple-system, "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --ok: #3f7d4e;
+        --ng: #b5483a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --paper: #1a1917;
+          --paper-2: #232220;
+          --ink: #ebe7dc;
+          --muted: #a39e90;
+          --rule: #36342f;
+          --accent: #e0745f;
+          --accent-ink: #1a1917;
+          --shadow: 0 30px 80px -30px rgb(0 0 0 / 0.8), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+          --ok: #7fbf8e;
+          --ng: #e0745f;
+        }
+      }
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --paper: #1a1917;
+        --paper-2: #232220;
+        --ink: #ebe7dc;
+        --muted: #a39e90;
+        --rule: #36342f;
+        --accent: #e0745f;
+        --accent-ink: #1a1917;
+        --shadow: 0 30px 80px -30px rgb(0 0 0 / 0.8), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+        --ok: #7fbf8e;
+        --ng: #e0745f;
+      }
+      :root[data-theme="light"] {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font: 17px/1.85 var(--sans);
+        overflow-x: hidden;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+      a {
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+      .wrap {
+        width: min(1120px, 100% - 48px);
+        margin-inline: auto;
+      }
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        color: var(--accent);
+        font: 500 0.8rem/1 var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: var(--serif);
+        font-weight: 700;
+        line-height: 1.25;
+        letter-spacing: 0.02em;
+      }
+      h2 {
+        font-size: clamp(1.8rem, 3.4vw, 2.7rem);
+      }
+      .lead {
+        max-width: 38em;
+        color: var(--muted);
+      }
+
+      /* grain */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        pointer-events: none;
+        opacity: 0.05;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+        mix-blend-mode: multiply;
+      }
+      :root[data-theme="dark"] body::before {
+        mix-blend-mode: screen;
+        opacity: 0.04;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) body::before {
+          mix-blend-mode: screen;
+          opacity: 0.04;
+        }
+      }
+
+      /* nav */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 1px solid transparent;
+        background: color-mix(in srgb, var(--paper) 78%, transparent);
+        backdrop-filter: saturate(1.4) blur(14px);
+        -webkit-backdrop-filter: saturate(1.4) blur(14px);
+        transition: border-color 0.3s;
+      }
+      .nav.scrolled {
+        border-bottom-color: var(--rule);
+      }
+      .nav .wrap {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        height: 64px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font: 700 1.2rem/1 var(--serif);
+        text-decoration: none;
+        letter-spacing: 0.12em;
+      }
+      .brand img {
+        width: 28px;
+        height: 28px;
+      }
+      .brand small {
+        color: var(--accent);
+        font: 500 0.7rem/1 var(--mono);
+        letter-spacing: 0.08em;
+      }
+      .nav nav {
+        display: flex;
+        gap: 1.5rem;
+        margin-left: auto;
+        font-size: 0.92rem;
+      }
+      .nav nav a {
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .nav nav a:hover {
+        color: var(--ink);
+      }
+      .icon-btn {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .icon-btn:hover {
+        border-color: var(--accent);
+      }
+      @media (max-width: 760px) {
+        .nav nav a:not(.keep) {
+          display: none;
+        }
+      }
+
+      /* buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.5rem;
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.98rem;
+        text-decoration: none;
+        will-change: transform;
+      }
+      .btn.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .btn.ghost {
+        background: transparent;
+      }
+
+      /* hero */
+      .hero {
+        position: relative;
+        padding: clamp(56px, 9vw, 120px) 0 clamp(40px, 6vw, 80px);
+        overflow: clip;
+      }
+      .hanko {
+        position: absolute;
+        top: -12vw;
+        right: -8vw;
+        width: min(52vw, 640px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent) 92%, #fff), var(--accent) 60%, color-mix(in srgb, var(--accent) 70%, #000));
+        opacity: 0.12;
+        filter: blur(0.5px);
+      }
+      .hero h1 {
+        max-width: 11em;
+        font-size: clamp(2.6rem, 7.2vw, 5.6rem);
+        font-weight: 900;
+        line-height: 1.12;
+        letter-spacing: 0.04em;
+      }
+      .hero h1 .ch {
+        display: inline-block;
+        will-change: transform;
+      }
+      .hero h1 em {
+        color: var(--accent);
+        font-style: normal;
+      }
+      .hero .lead {
+        margin: 1.6rem 0 2rem;
+        font-size: 1.08rem;
+      }
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 2.2rem;
+      }
+      .chip {
+        padding: 0.3rem 0.85rem;
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        background: var(--paper-2);
+        font: 500 0.82rem/1.6 var(--mono);
+        color: var(--muted);
+      }
+      .stage {
+        perspective: 1600px;
+        margin-top: clamp(40px, 6vw, 72px);
+      }
+      .window {
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        transform-style: preserve-3d;
+        will-change: transform;
+      }
+      .window .bar {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        height: 38px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--rule);
+        background: var(--paper-2);
+      }
+      .window .bar i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #d8d3c6;
+      }
+      .window .bar i:nth-child(1) {
+        background: #ec6a5e;
+      }
+      .window .bar i:nth-child(2) {
+        background: #f4be4f;
+      }
+      .window .bar i:nth-child(3) {
+        background: #61c454;
+      }
+      .window .bar span {
+        margin-left: 0.8rem;
+        color: var(--muted);
+        font: 400 0.78rem/1 var(--mono);
+      }
+
+      /* marquee */
+      .marquee {
+        overflow: hidden;
+        border-block: 1px solid var(--rule);
+        background: var(--paper-2);
+      }
+      .marquee .track {
+        display: flex;
+        width: max-content;
+        padding: 1.1rem 0;
+        font: 700 clamp(1.4rem, 3vw, 2.2rem)/1 var(--serif);
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+      .marquee .track span {
+        padding-inline: 1.4rem;
+      }
+      .marquee .track span:nth-child(even) {
+        color: var(--accent);
+      }
+
+      section {
+        padding: clamp(72px, 10vw, 140px) 0;
+      }
+      .head {
+        margin-bottom: clamp(32px, 5vw, 56px);
+      }
+
+      /* bento */
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 16px;
+      }
+      .card {
+        position: relative;
+        grid-column: span 2;
+        padding: 1.6rem 1.5rem 1.7rem;
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+        background: var(--paper-2);
+        transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s, box-shadow 0.35s;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: color-mix(in srgb, var(--accent) 50%, var(--rule));
+        box-shadow: var(--shadow);
+      }
+      .card.wide {
+        grid-column: span 3;
+      }
+      .card svg.ico {
+        width: 34px;
+        height: 34px;
+        margin-bottom: 1rem;
+        stroke: var(--accent);
+        fill: none;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .card h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.22rem;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.96rem;
+        line-height: 1.8;
+      }
+      kbd {
+        padding: 0.05em 0.45em;
+        border: 1px solid var(--rule);
+        border-bottom-width: 2px;
+        border-radius: 6px;
+        background: var(--paper);
+        font: 500 0.82em var(--mono);
+        color: var(--ink);
+      }
+      @media (max-width: 900px) {
+        .card,
+        .card.wide {
+          grid-column: span 3;
+        }
+      }
+      @media (max-width: 620px) {
+        .card,
+        .card.wide {
+          grid-column: span 6;
+        }
+      }
+
+      /* showcase */
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1.4rem;
+      }
+      .tab {
+        position: relative;
+        padding: 0.55rem 1.15rem;
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font: 700 0.9rem/1 var(--sans);
+        cursor: pointer;
+        transition: color 0.2s, background 0.2s, border-color 0.2s;
+      }
+      .tab[aria-selected="true"] {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .shots {
+        position: relative;
+      }
+      .shots .shot {
+        display: none;
+      }
+      .shots .shot.on {
+        display: block;
+      }
+      .shot figcaption {
+        margin-top: 0.9rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      /* pipeline */
+      .pipeline {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: clamp(24px, 5vw, 64px);
+        align-items: center;
+      }
+      .pipeline svg {
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+      .pipeline .node {
+        fill: var(--paper-2);
+        stroke: var(--ink);
+        stroke-width: 1.5;
+      }
+      .pipeline .node.hot {
+        stroke: var(--accent);
+        fill: color-mix(in srgb, var(--accent) 10%, var(--paper-2));
+      }
+      .pipeline text {
+        fill: var(--ink);
+        font: 700 15px var(--sans);
+        text-anchor: middle;
+      }
+      .pipeline .sub {
+        fill: var(--muted);
+        font: 400 11.5px var(--mono);
+      }
+      .pipeline .wire {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+      .pipeline ol {
+        margin: 0;
+        padding-left: 1.2rem;
+        color: var(--muted);
+      }
+      .pipeline li {
+        margin-bottom: 0.7rem;
+      }
+      .pipeline li b {
+        color: var(--ink);
+      }
+      @media (max-width: 860px) {
+        .pipeline {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* stats */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+        background: var(--rule);
+      }
+      .stat {
+        padding: 2rem 1.4rem;
+        background: var(--paper);
+        text-align: center;
+      }
+      .stat strong {
+        display: block;
+        font: 900 clamp(2rem, 4.6vw, 3.4rem)/1.1 var(--serif);
+        color: var(--accent);
+      }
+      .stat span {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        line-height: 1.6;
+      }
+      @media (max-width: 760px) {
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* table */
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+      }
+      table {
+        width: 100%;
+        min-width: 1080px;
+        border-collapse: collapse;
+        font-size: 0.93rem;
+        line-height: 1.6;
+      }
+      th,
+      td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--rule);
+        text-align: left;
+        vertical-align: top;
+      }
+      thead th {
+        background: var(--paper-2);
+        font: 700 0.9rem var(--sans);
+      }
+      th:first-child {
+        width: 17%;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      tbody tr:last-child td,
+      tbody tr:last-child th {
+        border-bottom: 0;
+      }
+      td.us,
+      thead th.us {
+        background: color-mix(in srgb, var(--accent) 7%, transparent);
+      }
+      thead th.us {
+        color: var(--accent);
+      }
+      .y {
+        color: var(--ok);
+        font-weight: 700;
+      }
+      .n {
+        color: var(--ng);
+        font-weight: 700;
+      }
+      .q {
+        color: var(--muted);
+      }
+      .note {
+        margin-top: 1rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      /* install */
+      .code {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        border-radius: 16px;
+        background: #1c1b19;
+        color: #ebe7dc;
+      }
+      .code pre {
+        margin: 0;
+        padding: 1.4rem 1.5rem;
+        overflow-x: auto;
+        font: 400 0.9rem/1.9 var(--mono);
+      }
+      .code .p {
+        color: #e0745f;
+        user-select: none;
+      }
+      .code .c {
+        color: #8a857a;
+      }
+      .copy {
+        position: absolute;
+        top: 0.7rem;
+        right: 0.7rem;
+        padding: 0.35rem 0.8rem;
+        border: 1px solid #44413a;
+        border-radius: 999px;
+        background: transparent;
+        color: #cfcabd;
+        font: 500 0.75rem var(--mono);
+        cursor: pointer;
+      }
+      .copy:hover {
+        border-color: #e0745f;
+      }
+      .keys {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 12px;
+        margin-top: 2rem;
+        padding: 0;
+        list-style: none;
+      }
+      .keys li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        background: var(--paper-2);
+        font-size: 0.9rem;
+      }
+
+      footer {
+        padding: 56px 0 72px;
+        border-top: 1px solid var(--rule);
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      footer .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem 2rem;
+      }
+      footer a {
+        text-underline-offset: 3px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .card,
+        .card:hover {
+          transition: none;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="nav" id="nav">
+      <div class="wrap">
+        <a class="brand" href="#top" aria-label="Washi">
+          <img src="../favicon.svg" alt="" width="28" height="28" />
+          Washi <small>和紙</small>
+        </a>
+        <nav aria-label="Main">
+          <a href="#features">Features</a>
+          <a href="#shots">Screens</a>
+          <a href="#how">How it works</a>
+          <a href="#compare">Compare</a>
+          <a class="keep" href="#install">Install</a>
+          <a class="keep" href="../" hreflang="ja" lang="ja">日本語</a>
+        </nav>
+        <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme" title="Toggle theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" />
+            <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" />
+          </svg>
+        </button>
+        <a class="btn primary" style="padding: 0.55rem 1.1rem; font-size: 0.88rem" href="https://github.com/kiwamizamurai/washi">GitHub</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <div class="hero">
+        <div class="hanko" aria-hidden="true"></div>
+        <div class="wrap">
+          <span class="eyebrow">Markdown · Typst · LaTeX viewer</span>
+          <h1 id="title" aria-label="Read quietly, on every save.">Read <em>quietly</em>, on every save.</h1>
+          <p class="lead">
+            Markdown, Typst, LaTeX, Mermaid and PDF in one lightweight viewer. Leave editing to your favorite editor or AI agent; Washi redraws on every save while keeping your scroll position.
+          </p>
+          <div class="cta">
+            <a class="btn primary magnet" href="https://github.com/kiwamizamurai/washi">View on GitHub →</a>
+            <a class="btn ghost magnet" href="#install">Install</a>
+          </div>
+          <div class="chips" aria-label="Supported formats">
+            <span class="chip">.md</span><span class="chip">.typ</span><span class="chip">.tex</span><span class="chip">.mmd</span><span class="chip">.pdf</span>
+            <span class="chip">Paste with ⌘V</span>
+          </div>
+
+          <div class="stage">
+            <div class="window" id="window">
+              <div class="bar"><i></i><i></i><i></i><span>showcase.md — Washi</span></div>
+              <img src="../assets/shot-markdown-light.jpg" width="1221" height="641" alt="Washi showing Markdown math and code, with the outline panel on the left" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="marquee" aria-hidden="true">
+        <div class="track" id="track">
+          <span>Markdown</span><span>Typst</span><span>LaTeX</span><span>Mermaid</span><span>PDF</span>
+          <span>Markdown</span><span>Typst</span><span>LaTeX</span><span>Mermaid</span><span>PDF</span>
+          <span>Markdown</span><span>Typst</span><span>LaTeX</span><span>Mermaid</span><span>PDF</span>
+          <span>Markdown</span><span>Typst</span><span>LaTeX</span><span>Mermaid</span><span>PDF</span>
+        </div>
+      </div>
+
+      <section id="features">
+        <div class="wrap">
+          <div class="head">
+            <span class="eyebrow">Features</span>
+            <h2>Polished for reading, and only reading.</h2>
+            <p class="lead">A tool for reading, not writing. That is why it starts fast and the screen stays quiet.</p>
+          </div>
+          <div class="bento">
+            <article class="card wide reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v4.5h-4.5" /></svg>
+              <h3>Redraws the moment you save</h3>
+              <p>It redraws as soon as your editor saves, keeping your reading position and zoom. Split chapters, bibliographies and images into separate files and saving any of them updates the view. You can follow an AI agent rewriting a file as it happens.</p>
+            </article>
+            <article class="card wide reveal">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4V3h6v1M9.5 10h5M9.5 14h5" /></svg>
+              <h3>Paste with <kbd>⌘V</kbd> and read</h3>
+              <p>Washi detects Markdown, Typst, LaTeX or Mermaid from the clipboard and shows it. No file needed. Dropping a file works too.</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M5 4l5 15 2.2-6.3L19 10.5z" /><path d="M13 13l5 5" /></svg>
+              <h3><kbd>⌘</kbd>-click to the source</h3>
+              <p><kbd>⌘</kbd>-click a Typst or LaTeX PDF to open the matching line in your editor (line and column for Typst, SyncTeX for LaTeX).</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12" /><circle cx="18" cy="6" r="1.2" /></svg>
+              <h3>Outline and search</h3>
+              <p>An outline panel that follows your position, PDF bookmarks included. <kbd>⌘F</kbd> scrolls to each match automatically.</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M5 18l4-12 3 8 2-5 5 9" /><path d="M3 20h18" /></svg>
+              <h3>Math, code and diagrams</h3>
+              <p>KaTeX math, highlighted code with a copy button, and Mermaid diagrams you can click to enlarge, then drag and scroll to pan and zoom.</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" /></svg>
+              <h3>Easy on the eyes</h3>
+              <p>System, light and dark themes, adjustable text width, and zoom with <kbd>⌘</kbd>+/− or pinch. Right-to-left text displays correctly too.</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="10" rx="2" /><rect x="9" y="9" width="12" height="10" rx="2" /></svg>
+              <h3>One file, one window</h3>
+              <p>Pass several files and each opens in its own window. Relative links inside a document are followed within Washi.</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 13h6M9 17h4" /></svg>
+              <h3>PDF, as it is</h3>
+              <p>Text selection, search and a bookmark outline. Only pages near the viewport are drawn, so long PDFs open lightly.</p>
+            </article>
+            <article class="card wide reveal">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9l3 3-3 3M12 15h5" /></svg>
+              <h3>Open it straight from an agent</h3>
+              <p><code>washi report.typ</code> opens the file and returns without waiting for the app. It supports <code>--json</code> output, validation beforehand, and stdin with <code>cat draft.md | washi -</code>, so you can check an agent's output at a glance.</p>
+            </article>
+            <article class="card wide reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M9 12l2.2 2.2L15.5 10" /></svg>
+              <h3>Stays on your machine, errs on the safe side</h3>
+              <p>Raw HTML inside documents is stripped and the app runs with a strict CSP. There is no telemetry or analytics. Washi itself only touches the network to fetch Typst <code>@preview</code> packages (the external tectonic may fetch TeX packages on its own).</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="shots" style="background: var(--paper-2)">
+        <div class="wrap">
+          <div class="head">
+            <span class="eyebrow">Screens</span>
+            <h2>Every format, the same quiet.</h2>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Screenshots">
+            <button class="tab" role="tab" aria-selected="true" data-target="s1">Markdown</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s2">Mermaid · dark</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s3">Typst</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s4">LaTeX</button>
+          </div>
+          <div class="shots">
+            <figure class="shot on" id="s1" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md</span></div><img loading="lazy" src="../assets/shot-markdown-light.jpg" width="1221" height="641" alt="Markdown math and code" /></div>
+              <figcaption>KaTeX math and highlighted code. On the left, an outline panel that tracks your position.</figcaption>
+            </figure>
+            <figure class="shot" id="s2" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — dark</span></div><img loading="lazy" src="../assets/shot-markdown-dark.jpg" width="1221" height="641" alt="A Mermaid diagram in the dark theme" /></div>
+              <figcaption>Mermaid colors switch with the dark theme. Click a diagram to enlarge it.</figcaption>
+            </figure>
+            <figure class="shot" id="s3" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>report.typ</span></div><img loading="lazy" src="../assets/shot-typst.jpg" width="1221" height="641" alt="A Typst report shown as a PDF" /></div>
+              <figcaption>Typst is compiled straight to PDF by the compiler built into the app. Bookmarks become the outline panel.</figcaption>
+            </figure>
+            <figure class="shot" id="s4" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="../assets/shot-latex.jpg" width="1221" height="641" alt="A LaTeX paper shown as a PDF" /></div>
+              <figcaption>LaTeX is compiled with latexmk, or tectonic if that is missing. Errors are shown with line numbers.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="how">
+        <div class="wrap pipeline">
+          <div>
+            <span class="eyebrow">How it works</span>
+            <h2>Format differences hide behind one door.</h2>
+            <ol style="margin-top: 1.4rem">
+              <li>A <b>Renderer</b> handles each format, and the output is always either HTML or PDF.</li>
+              <li>The UI only switches views by output type. To add a format, implement one Renderer and register it.</li>
+              <li>External commands such as TeX sit behind a swappable interface, and tests use fakes.</li>
+              <li>Rendering and the CLI live in <code>washi-core</code>, which does not depend on Tauri; the app itself (<code>src-tauri</code>) only handles the UI and windows.</li>
+            </ol>
+          </div>
+          <svg viewBox="0 0 520 330" role="img" aria-label="Diagram: a source passes through a Renderer and becomes HTML or PDF">
+            <g>
+              <rect class="node" x="10" y="20" width="130" height="46" rx="10" />
+              <text x="75" y="48">.md</text>
+              <rect class="node" x="10" y="92" width="130" height="46" rx="10" />
+              <text x="75" y="120">.typ</text>
+              <rect class="node" x="10" y="164" width="130" height="46" rx="10" />
+              <text x="75" y="192">.tex</text>
+              <rect class="node" x="10" y="236" width="130" height="46" rx="10" />
+              <text x="75" y="264">⌘V paste</text>
+            </g>
+            <path class="wire" d="M140 43 C 200 43, 200 163, 250 163" />
+            <path class="wire" d="M140 115 C 190 115, 200 163, 250 163" />
+            <path class="wire" d="M140 187 C 190 187, 200 163, 250 163" />
+            <path class="wire" d="M140 259 C 200 259, 200 163, 250 163" />
+            <rect class="node hot" x="250" y="125" width="110" height="76" rx="14" />
+            <text x="305" y="159">Renderer</text>
+            <text class="sub" x="305" y="180">trait</text>
+            <path class="wire" d="M360 150 C 400 150, 400 78, 430 78" />
+            <path class="wire" d="M360 176 C 400 176, 400 248, 430 248" />
+            <rect class="node" x="430" y="52" width="82" height="52" rx="10" />
+            <text x="471" y="76">HTML</text>
+            <text class="sub" x="471" y="94">WebView</text>
+            <rect class="node" x="430" y="222" width="82" height="52" rx="10" />
+            <text x="471" y="246">PDF</text>
+            <text class="sub" x="471" y="264">pdf.js</text>
+          </svg>
+        </div>
+      </section>
+
+      <section style="padding-top: 0">
+        <div class="wrap">
+          <div class="stats" id="stats">
+            <div class="stat"><strong data-count="5">5</strong><span>formats<br />Markdown, Typst, LaTeX, Mermaid, PDF</span></div>
+            <div class="stat"><strong data-count="24" data-suffix=" MB">24 MB</strong><span>measured, zipped<br />Apple Silicon, ad-hoc signature</span></div>
+            <div class="stat"><strong data-count="0">0</strong><span>telemetry / analytics<br />Washi itself only connects to fetch @preview</span></div>
+            <div class="stat"><strong>MIT</strong><span>license<br />Built with Tauri, Rust and Typst</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="compare" style="background: var(--paper-2)">
+        <div class="wrap">
+          <div class="head">
+            <span class="eyebrow">Compare</span>
+            <h2>Against the other apps that handle all three.</h2>
+            <p class="lead">A comparison with apps that open Markdown, Typst and LaTeX as files. To write, Oleafly, Texpile, hibi or Quire Writer; to read, Washi or Typeset Viewer. That is how we see the split.</p>
+          </div>
+          <div class="table-wrap reveal">
+            <table>
+              <thead>
+                <tr>
+                  <th></th><th class="us">Washi</th><th>Typeset Viewer</th><th>Texpile</th><th>Oleafly</th><th>hibi</th><th>Quire Writer</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th>Role</th><td class="us">Viewer only</td><td>Viewer + notes and review</td><td>Editor</td><td>Writing workspace</td><td>Note editor</td><td>Writing app with an AI agent</td></tr>
+                <tr><th>License</th><td class="us"><span class="y">○</span> MIT</td><td><span class="n">×</span> Proprietary (closed source)</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> GPL-3.0</td><td><span class="y">○</span> GPL-3.0</td></tr>
+                <tr><th>Latest release</th><td class="us">0.1.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly only</td><td>v0.2.8</td></tr>
+                <tr><th>Markdown, Typst, LaTeX</th><td class="us"><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> enabled in Settings</td><td><span class="y">○</span></td></tr>
+                <tr><th>External tool for Markdown</th><td class="us">None</td><td>Pandoc</td><td>None</td><td>None (Pandoc bundled)</td><td>None</td><td>None</td></tr>
+                <tr><th>Mermaid</th><td class="us"><span class="y">○</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="y">○</span></td><td><span class="q">?</span></td></tr>
+                <tr><th>Auto-refresh on external save</th><td class="us"><span class="y">○</span> keeps position (also includes, .bib, images)</td><td><span class="y">○</span> keeps position (also watches includes, .bib)</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td></tr>
+                <tr><th>Live preview while typing</th><td class="us"><span class="n">×</span> no editor</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> side by side</td><td><span class="y">○</span></td></tr>
+                <tr><th>Built-in editor</th><td class="us"><span class="n">×</span> deliberately none</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
+                <tr><th>PDF → source jump</th><td class="us"><span class="y">○</span> Typst, LaTeX</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="y">○</span> SyncTeX, tinymist</td><td><span class="q">?</span> not documented</td><td><span class="y">○</span> tinymist for Typst</td></tr>
+                <tr><th>LaTeX engine</th><td class="us">External (tectonic / latexmk; Homebrew installs tectonic)</td><td>External (latexmk)</td><td>External (TeX distribution)</td><td><span class="y">○</span> Tectonic bundled</td><td>External Tectonic</td><td>External (latexmk)</td></tr>
+                <tr><th>macOS download size</th><td class="us">24 MB (zip)</td><td>28 MB (zip)</td><td><span class="q">?</span></td><td>191 MB (dmg)</td><td><span class="q">?</span> no releases</td><td>56 MB (dmg)</td></tr>
+                <tr><th>OS</th><td class="us">macOS (others untested)</td><td>macOS 14+ (Apple Silicon)</td><td>Windows, macOS, Linux</td><td>Windows, macOS, Linux</td><td>Windows, macOS</td><td>macOS (Linux experimental)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            Checked on 2026-10-06 against GitHub (repositories, releases, READMEs) and each official site. "?" marks an item the README or site does not say, so we could not confirm it; it does not mean the feature is absent. Washi's size is a zip of our own build; the others are their published downloads (formats differ, so treat them as a rough guide). Apps that handle only some of the formats are listed in the <a href="https://github.com/kiwamizamurai/washi/blob/main/README.md#comparison-with-other-apps">README</a>.
+          </p>
+        </div>
+      </section>
+
+      <section id="install">
+        <div class="wrap">
+          <div class="head">
+            <span class="eyebrow">Get started</span>
+            <h2>One line with Homebrew.</h2>
+            <p class="lead">For Apple Silicon macOS. The <code>washi</code> command and tectonic (for LaTeX) are installed together. Washi is not signed or notarized, so the Cask removes the quarantine attribute.</p>
+          </div>
+          <div class="code reveal">
+            <button class="copy" type="button" id="copy">Copy</button>
+<pre id="cmd"><span class="c"># Install with Homebrew (Apple Silicon)</span>
+<span class="p">$</span> brew install --cask kiwamizamurai/tap/washi
+<span class="p">$</span> washi report.typ notes.md
+
+<span class="c"># Run from source</span>
+<span class="p">$</span> git clone https://github.com/kiwamizamurai/washi
+<span class="p">$</span> cd washi &amp;&amp; pnpm install
+<span class="p">$</span> pnpm tauri dev -- -- --gui examples/showcase.md
+
+<span class="c"># Build the app (target/release/bundle/macos/Washi.app)</span>
+<span class="p">$</span> pnpm release</pre>
+          </div>
+          <ul class="keys reveal">
+            <li>Open <span><kbd>⌘</kbd> <kbd>O</kbd></span></li>
+            <li>Paste and open <span><kbd>⌘</kbd> <kbd>V</kbd></span></li>
+            <li>Find <span><kbd>⌘</kbd> <kbd>F</kbd></span></li>
+            <li>Toggle outline <span><kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>O</kbd></span></li>
+            <li>Zoom in / out <span><kbd>⌘</kbd> <kbd>+</kbd> / <kbd>−</kbd></span></li>
+            <li>Jump to source <span><kbd>⌘</kbd> click</span></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <span>© 2026 kiwamizamurai · MIT License</span>
+        <span>
+          <a href="https://github.com/kiwamizamurai/washi">GitHub</a> ·
+          Tauri · Rust · <a href="https://typst.app">Typst</a> · pdf.js · KaTeX · Mermaid
+        </span>
+      </div>
+    </footer>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+      integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
+      integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      (() => {
+        const $ = (s, r = document) => r.querySelector(s);
+        const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+        const root = document.documentElement;
+        const themeBtn = $("#theme");
+        try {
+          const saved = localStorage.getItem("washi:theme");
+          if (saved) root.dataset.theme = saved;
+        } catch {}
+        themeBtn.addEventListener("click", () => {
+          const dark = root.dataset.theme
+            ? root.dataset.theme === "dark"
+            : matchMedia("(prefers-color-scheme: dark)").matches;
+          root.dataset.theme = dark ? "light" : "dark";
+          try {
+            localStorage.setItem("washi:theme", root.dataset.theme);
+          } catch {}
+        });
+
+        const nav = $("#nav");
+        const onScroll = () => nav.classList.toggle("scrolled", scrollY > 8);
+        addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+
+        const tabs = $$(".tab");
+        const select = (tab) => {
+          tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+          const next = $("#" + tab.dataset.target);
+          const current = $(".shot.on");
+          if (next === current) return;
+          const swap = () => {
+            current.classList.remove("on");
+            next.classList.add("on");
+          };
+          if (window.gsap) {
+            gsap.to(current, { opacity: 0, y: 8, duration: 0.18, onComplete: () => {
+              swap();
+              gsap.fromTo(next, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" });
+            } });
+          } else swap();
+        };
+        tabs.forEach((t) => t.addEventListener("click", () => select(t)));
+
+        const copy = $("#copy");
+        copy.addEventListener("click", async () => {
+          const text = $("#cmd").innerText.replace(/^\$ /gm, "");
+          try {
+            await navigator.clipboard.writeText(text);
+            copy.textContent = "Copied";
+          } catch {
+            copy.textContent = "Failed";
+          }
+          setTimeout(() => (copy.textContent = "Copy"), 1400);
+        });
+
+        if (!window.gsap || !window.ScrollTrigger) return;
+        gsap.registerPlugin(ScrollTrigger);
+
+        const title = $("#title");
+        const splitChars = (el) => {
+          const label = el.getAttribute("aria-label");
+          const walk = (node) => {
+            [...node.childNodes].forEach((n) => {
+              if (n.nodeType === 3) {
+                const frag = document.createDocumentFragment();
+                [...n.textContent].forEach((c) => {
+                  const s = document.createElement("span");
+                  s.className = "ch";
+                  s.setAttribute("aria-hidden", "true");
+                  s.textContent = c;
+                  frag.append(s);
+                });
+                n.replaceWith(frag);
+              } else walk(n);
+            });
+          };
+          walk(el);
+          if (label) el.setAttribute("aria-label", label);
+          return $$(".ch", el);
+        };
+
+        const mm = gsap.matchMedia();
+
+        mm.add("(prefers-reduced-motion: no-preference)", () => {
+          const chars = splitChars(title);
+          const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+          tl.from(".eyebrow", { y: 14, opacity: 0, duration: 0.7 }, 0)
+            .from(chars, { yPercent: 70, opacity: 0, rotate: 4, duration: 1.1, stagger: 0.035 }, 0.1)
+            .from(".hero .lead", { y: 24, opacity: 0, duration: 0.9 }, 0.55)
+            .from(".cta .btn", { y: 20, opacity: 0, duration: 0.8, stagger: 0.1 }, 0.7)
+            .from(".chip", { y: 14, opacity: 0, scale: 0.9, duration: 0.6, stagger: 0.06 }, 0.85)
+            .from(".stage", { y: 90, opacity: 0, duration: 1.3 }, 0.6)
+            .from(".hanko", { scale: 0.6, opacity: 0, duration: 1.8, ease: "expo.out" }, 0);
+
+          gsap.to(".hanko", {
+            yPercent: 28,
+            ease: "none",
+            scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true },
+          });
+
+          gsap.fromTo(
+            "#window",
+            { rotationX: 14, scale: 0.94, transformPerspective: 1600 },
+            {
+              rotationX: 0,
+              scale: 1,
+              ease: "none",
+              scrollTrigger: { trigger: ".stage", start: "top 92%", end: "top 32%", scrub: 0.6 },
+            },
+          );
+
+          const win = $("#window");
+          const rx = gsap.quickTo(win, "rotationY", { duration: 0.8, ease: "power3.out" });
+          const ry = gsap.quickTo(win, "y", { duration: 0.8, ease: "power3.out" });
+          if (matchMedia("(hover: hover)").matches) {
+            $(".stage").addEventListener("pointermove", (e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              rx(((e.clientX - r.left) / r.width - 0.5) * 6);
+              ry(((e.clientY - r.top) / r.height - 0.5) * -10);
+            });
+            $(".stage").addEventListener("pointerleave", () => {
+              rx(0);
+              ry(0);
+            });
+          }
+
+          $$(".magnet").forEach((el) => {
+            const x = gsap.quickTo(el, "x", { duration: 0.5, ease: "power3.out" });
+            const y = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" });
+            el.addEventListener("pointermove", (e) => {
+              const r = el.getBoundingClientRect();
+              x((e.clientX - (r.left + r.width / 2)) * 0.25);
+              y((e.clientY - (r.top + r.height / 2)) * 0.35);
+            });
+            el.addEventListener("pointerleave", () => {
+              x(0);
+              y(0);
+            });
+          });
+
+          const track = $("#track");
+          gsap.to(track, { xPercent: -25, ease: "none", duration: 22, repeat: -1 });
+
+          ScrollTrigger.batch(".reveal", {
+            start: "top 88%",
+            once: true,
+            onEnter: (els) =>
+              gsap.from(els, { y: 46, opacity: 0, duration: 0.9, stagger: 0.09, ease: "power3.out", overwrite: true }),
+          });
+
+          $$(".head").forEach((h) =>
+            gsap.from(h.children, {
+              y: 30,
+              opacity: 0,
+              duration: 0.9,
+              stagger: 0.1,
+              ease: "power3.out",
+              scrollTrigger: { trigger: h, start: "top 85%", once: true },
+            }),
+          );
+
+          const wires = $$(".pipeline .wire");
+          wires.forEach((w) => {
+            const len = w.getTotalLength();
+            gsap.set(w, { strokeDasharray: len, strokeDashoffset: len });
+          });
+          const pl = gsap.timeline({ scrollTrigger: { trigger: ".pipeline svg", start: "top 75%", once: true } });
+          pl.from(".pipeline .node, .pipeline text", { opacity: 0, y: 10, duration: 0.6, stagger: 0.03, ease: "power2.out" })
+            .to(wires, { strokeDashoffset: 0, duration: 1.1, stagger: 0.12, ease: "power2.inOut" }, 0.3);
+
+          $$("[data-count]").forEach((el) => {
+            const end = Number(el.dataset.count);
+            const suffix = el.dataset.suffix || "";
+            const o = { v: 0 };
+            gsap.to(o, {
+              v: end,
+              duration: 1.6,
+              ease: "power2.out",
+              snap: { v: 1 },
+              onUpdate: () => (el.textContent = o.v + suffix),
+              scrollTrigger: { trigger: el, start: "top 90%", once: true },
+            });
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
