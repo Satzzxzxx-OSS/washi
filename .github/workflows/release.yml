@@ -1,0 +1,117 @@
+name: Release
+
+# v* タグを push すると、.app をビルドして GitHub Release に載せ、Homebrew tap の Cask を更新する。
+#   git tag v0.1.0 && git push origin v0.1.0
+# 事前に必要なもの: リポジトリの secret HOMEBREW_TAP_TOKEN
+#   （kiwamizamurai/homebrew-tap に contents:write できる fine-grained PAT）
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  TAP_REPO: kiwamizamurai/homebrew-tap
+
+jobs:
+  release:
+    runs-on: macos-15 # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: タグとバージョンの一致を確認
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          package=$(node -p "require('./package.json').version")
+          tauri=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          crate=$(sed -n 's/^version = "\(.*\)"/\1/p' src-tauri/Cargo.toml | head -1)
+          echo "tag=$version package.json=$package tauri.conf.json=$tauri Cargo.toml=$crate"
+          [ "$version" = "$package" ] && [ "$version" = "$tauri" ] && [ "$version" = "$crate" ]
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: cargo test --workspace
+
+      # ローカルのパスを埋め込まないよう置換して .app を作る（scripts/release.sh）
+      - run: pnpm release
+
+      - name: zip と sha256 を作る
+        id: pack
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          asset="Washi-${version}-aarch64.zip"
+          ditto -c -k --sequesterRsrc --keepParent target/release/bundle/macos/Washi.app "$asset"
+          shasum -a 256 "$asset" | cut -d' ' -f1 > "$asset.sha256"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(cat "$asset.sha256")" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub Release を作る
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "${{ steps.pack.outputs.asset }}" "${{ steps.pack.outputs.asset }}.sha256" \
+            --title "Washi ${GITHUB_REF_NAME#v}" --generate-notes --verify-tag
+
+      - name: Homebrew tap の Cask を更新
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          [ -n "$TAP_TOKEN" ] || { echo "HOMEBREW_TAP_TOKEN が未設定です"; exit 1; }
+          version="${GITHUB_REF_NAME#v}"
+          sha256="${{ steps.pack.outputs.sha256 }}"
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
+          mkdir -p tap/Casks
+          cat > tap/Casks/washi.rb <<CASK
+          cask "washi" do
+            version "${version}"
+            sha256 "${sha256}"
+
+            url "https://github.com/kiwamizamurai/washi/releases/download/v#{version}/Washi-#{version}-aarch64.zip"
+            name "Washi"
+            desc "Quiet viewer for Markdown, Typst, LaTeX, Mermaid and PDF"
+            homepage "https://github.com/kiwamizamurai/washi"
+
+            depends_on arch: :arm64
+            # LaTeX の描画に使う（latexmk が PATH にあればそちらを優先する）
+            depends_on formula: "tectonic"
+            depends_on :macos
+
+            app "Washi.app"
+            # washi コマンドを PATH に置く（ターミナルや AI エージェントから開ける）
+            binary "#{appdir}/Washi.app/Contents/MacOS/washi"
+
+            # 署名・公証は未対応（ad-hoc 署名）。Homebrew が付ける隔離属性を外して、初回起動の警告を避ける
+            postflight_steps do
+              run "/usr/bin/xattr",
+                  args:           ["-dr", "com.apple.quarantine", "{{appdir}}/Washi.app"],
+                  writable_paths: ["Washi.app"],
+                  writable_base:  :appdir
+            end
+
+            zap trash: [
+              "~/Library/Application Support/dev.kiwamizamurai.washi",
+              "~/Library/Caches/dev.kiwamizamurai.washi",
+              "~/Library/WebKit/dev.kiwamizamurai.washi",
+            ]
+          end
+          CASK
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/washi.rb
+          git diff --cached --quiet || git commit -m "washi ${version}"
+          git push
