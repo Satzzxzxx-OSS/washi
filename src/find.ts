@@ -1,3 +1,6 @@
+import { formatCount, matchStarts, stepTo, summarize } from "./search-count";
+import type { SearchSource } from "./search-source";
+
 type FindFn = (
   text: string,
   caseSensitive: boolean,
@@ -7,13 +10,18 @@ type FindFn = (
 
 export class FindBar {
   private readonly input: HTMLInputElement;
+  private readonly count: HTMLElement | null;
 
   constructor(
     private readonly form: HTMLFormElement,
+    private readonly source: SearchSource | null = null,
     private readonly find: FindFn = (text, caseSensitive, backwards, wrap) =>
       (window as unknown as { find: FindFn }).find(text, caseSensitive, backwards, wrap),
   ) {
     this.input = form.querySelector("input")!;
+    this.count = form.querySelector<HTMLElement>(".count");
+    // 打つたびに、全体の件数だけ出す（探すのは Enter / ボタンのとき）
+    this.input.addEventListener("input", () => this.showCount(false));
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       this.next(false);
@@ -42,17 +50,46 @@ export class FindBar {
 
   close() {
     this.form.hidden = true;
+    this.showCount(false, true);
     getSelection()?.removeAllRanges();
   }
 
   next(backwards: boolean) {
     const text = this.input.value;
     if (!text) return false;
-    const found = this.find(text, false, backwards, true);
+    const found = this.step(text, backwards) ?? this.find(text, false, backwards, true);
     this.form.classList.toggle("not-found", !found);
-    if (found) revealSelection();
+    if (found && !this.source) revealSelection();
+    this.showCount(found);
     this.input.focus();
     return found;
+  }
+
+  /**
+   * 次（前）の一致を選択する。`window.find` はページ全体（検索バーの入力欄やエディタも）を探して、フォーカスまで動かすので、
+   * 件数と同じ数え方で、文書の中だけから選ぶ。数えられない（大文字小文字の変換で長さが変わる）ときは `null`
+   */
+  private step(text: string, backwards: boolean): boolean | null {
+    const source = this.source;
+    if (!source) return null;
+    const starts = matchStarts(source.text(), text);
+    if (!starts) return null;
+    const at = stepTo(starts, source.selectionStart(), backwards);
+    return at !== null && source.select(at, text.length);
+  }
+
+  /** 「3 / 12」。`jumped` でなければ（まだ移動していない）、番号の代わりに「–」を出す */
+  private showCount(jumped: boolean, clear = false) {
+    if (!this.count) return;
+    const query = this.input.value;
+    if (clear || !query || !this.source) {
+      this.count.textContent = "";
+      if (!query) this.form.classList.remove("not-found");
+      return;
+    }
+    const summary = summarize(this.source.text(), query, jumped ? this.source.selectionStart() : null);
+    if (summary && !jumped) this.form.classList.toggle("not-found", summary.total === 0);
+    this.count.textContent = formatCount(summary, this.source.partial());
   }
 }
 

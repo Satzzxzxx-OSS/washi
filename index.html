@@ -17,17 +17,24 @@
     </section>
     <div id="resizer" role="separator" aria-orientation="vertical" aria-label="Editor width" tabindex="0" hidden></div>
     <div id="scroller">
+      <div id="progress" aria-hidden="true"><i></i></div>
       <section id="empty">
         <h1>Washi <span>和紙</span></h1>
         <p>Drop a Markdown, Typst, LaTeX, Mermaid or PDF file here</p>
         <p>or copy some text and paste it with <kbd>⌘V</kbd></p>
         <button id="open" type="button">Open a file <kbd>⌘O</kbd></button>
+        <section id="recent" aria-label="Recent files" hidden>
+          <h2>Recent</h2>
+          <ul></ul>
+          <button id="clear-recent" type="button">Clear recent files</button>
+        </section>
       </section>
       <article id="markdown" class="markdown" dir="auto" hidden></article>
       <div id="pdf" hidden></div>
     </div>
     <form id="find" hidden>
       <input type="search" placeholder="Find" aria-label="Find" />
+      <span class="count" role="status" aria-live="polite"></span>
       <button type="button" data-find="prev" aria-label="Previous">↑</button>
       <button type="button" data-find="next" aria-label="Next">↓</button>
       <button type="button" data-find="close" aria-label="Close">×</button>

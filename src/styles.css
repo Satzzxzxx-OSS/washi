@@ -96,6 +96,24 @@ body {
   display: none !important;
 }
 
+/* 読み進んだ割合。スクロールする領域の上端に貼り付く細い線（高さを取らない） */
+#progress {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 2px;
+  margin-bottom: -2px;
+  pointer-events: none;
+}
+#progress i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.8;
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+}
+
 #empty {
   display: grid;
   place-content: center;
@@ -128,6 +146,61 @@ body {
 }
 #empty button:hover {
   border-color: var(--accent);
+}
+#recent {
+  width: min(32rem, 90vw);
+  margin-top: 1.5rem;
+  text-align: left;
+}
+#recent h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+#recent ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#empty #recent li button {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  text-align: left;
+}
+#empty #recent li button:hover,
+#empty #recent li button:focus-visible {
+  background: var(--code-bg);
+  outline: none;
+}
+#recent .name {
+  flex: none;
+  color: var(--ink);
+}
+#recent .folder {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+}
+#empty #clear-recent {
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.6rem;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+#empty #clear-recent:hover {
+  color: var(--accent);
 }
 kbd {
   margin-left: 0.4em;
@@ -367,6 +440,15 @@ kbd {
   background: var(--paper);
   box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
 }
+#find .count {
+  align-self: center;
+  min-width: 3.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
 #find input {
   width: 14rem;
   padding: 0.25rem 0.5rem;
@@ -401,6 +483,7 @@ kbd {
     overflow: visible;
   }
   #find,
+  #progress,
   #error,
   .diagram-overlay {
     display: none !important;

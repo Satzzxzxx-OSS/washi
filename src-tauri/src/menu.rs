@@ -1,5 +1,6 @@
 use tauri::{
-    menu::{Menu, MenuItem, MenuItemBuilder, SubmenuBuilder},
+    image::Image,
+    menu::{AboutMetadata, Menu, MenuItem, MenuItemBuilder, SubmenuBuilder},
     AppHandle, Emitter, Manager, Wry,
 };
 
@@ -37,13 +38,23 @@ fn item(app: &AppHandle, id: &str, label: &str, accelerator: Option<&str>) -> ta
     }
 }
 
+/// 「Washi について」に出す名前・版・アイコン。開発版（.app に梱包されていない）でも、汎用のフォルダにならないようにする
+fn about_metadata() -> AboutMetadata<'static> {
+    AboutMetadata {
+        name: Some("Washi".into()),
+        version: Some(env!("CARGO_PKG_VERSION").into()),
+        icon: Image::from_bytes(include_bytes!("../icons/128x128@2x.png")).ok(),
+        ..Default::default()
+    }
+}
+
 pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let menu = Menu::new(app)?;
 
     #[cfg(target_os = "macos")]
     {
         let application = SubmenuBuilder::new(app, "Washi")
-            .about(None)
+            .about(Some(about_metadata()))
             .separator()
             .services()
             .separator()

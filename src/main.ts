@@ -22,8 +22,11 @@ import { EditingController } from "./editor/controller";
 import { FindBar } from "./find";
 import { hasJumpableSource, pageClick } from "./jump";
 import { OutlinePanel } from "./outline";
+import { ReadingProgress } from "./progress";
+import { domSearchSource } from "./search-source";
 import { basename, extensionOf, resolveLink } from "./paths";
 import { loadPrefs, savePrefs, type Prefs } from "./prefs";
+import { addRecent, clearRecent, describe, loadRecent, removeRecent } from "./recent";
 import { Scroll } from "./scroll";
 import { applyPrefs } from "./theme";
 import { createToast } from "./toast";
@@ -48,11 +51,24 @@ function debounce(fn: () => void, ms: number) {
   };
 }
 
+/** 起動画面の「最近開いたファイル」。開けなかったものは一覧から外す */
+const recentChanged = { current: () => {} };
+
 const host: Host = {
-  render,
+  async render(path) {
+    try {
+      return await render(path);
+    } catch (e) {
+      removeRecent(path);
+      recentChanged.current();
+      throw e;
+    }
+  },
   renderBuffer,
   renderText,
   async opened(path) {
+    addRecent(path);
+    recentChanged.current();
     await getCurrentWindow().setTitle(`${basename(path)} — Washi`);
     await watch(path);
   },
@@ -80,7 +96,43 @@ async function main() {
     [new MarkdownView(byId("markdown"), scroll), new PdfView(byId("pdf"), scroll)],
     outline,
   );
-  const finder = new FindBar(byId("find") as HTMLFormElement);
+  const recentList = byId("recent");
+  const showRecent = () => {
+    const list = loadRecent();
+    recentList.hidden = list.length === 0;
+    recentList.querySelector("ul")!.replaceChildren(
+      ...list.map((path) => {
+        const { name, folder } = describe(path);
+        const li = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.title = path;
+        const nameEl = document.createElement("span");
+        nameEl.className = "name";
+        nameEl.textContent = name;
+        const folderEl = document.createElement("span");
+        folderEl.className = "folder";
+        // direction: rtl で長いパスは左側を省くので、記号が動かないよう LRM で囲む
+        folderEl.textContent = `\u200e${folder}\u200e`;
+        button.append(nameEl, folderEl);
+        button.addEventListener("click", () => void open_(path));
+        li.append(button);
+        return li;
+      }),
+    );
+  };
+  recentChanged.current = showRecent;
+  byId("clear-recent").addEventListener("click", () => {
+    clearRecent();
+    showRecent();
+  });
+  showRecent();
+
+  const finder = new FindBar(byId("find") as HTMLFormElement, domSearchSource(byId("scroller")));
+  new ReadingProgress(byId("progress").firstElementChild as HTMLElement, byId("scroller"), [
+    byId("markdown"),
+    byId("pdf"),
+  ]);
   const toast = createToast(byId("toast"));
 
   const editing = new EditingController({

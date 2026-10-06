@@ -25,6 +25,7 @@ brew upgrade --cask washi     # update
 ## Usage
 
 - **Open**: drop a file on the window, `⌘O`, Finder's "Open With", or `washi a.md b.typ` (one window per file).
+- **Recent files**: the start screen lists the files you opened last.
 - **Paste**: copy text and press `⌘V`; Markdown, Typst, LaTeX or Mermaid is detected from the content.
 - **Edit**: press `⌘E` to split the window, with the source on the left and the preview on the right, updating as you type. `⌘E` again returns to reading. See [Editing](#editing).
 - **Save to refresh**: save the open file, or any file it includes (LaTeX `\input` and `.bib`, Typst `#include`, Markdown images, even in subfolders), and it re-renders in place, keeping your scroll position.
@@ -33,7 +34,7 @@ brew upgrade --cask washi     # update
 |---|---|
 | Open / Reload / Print | `⌘O` / `⌘R` / `⌘P` |
 | Edit (split view) / Save | `⌘E` / `⌘S` |
-| Find (and replace, while editing) | `⌘F` (`Enter` next, `⇧Enter` previous, `Esc` close) |
+| Find (and replace, while editing) | `⌘F` (`Enter` next, `⇧Enter` previous, `Esc` close; shows "3 / 12") |
 | Toggle the outline | `⇧⌘O` |
 | Zoom in / out / actual size | `⌘+` / `⌘-` / `⌘0` (`⌘` + wheel and pinch also work) |
 | Jump to source | `⌘`-click a Typst / LaTeX PDF (or Markdown, while editing) |

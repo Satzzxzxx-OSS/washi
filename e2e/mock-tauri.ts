@@ -9,7 +9,8 @@ const basename = (p: string) => p.split("/").pop() ?? p;
 
 async function wire(name: string) {
   const res = await fetch(`/e2e/fixtures/${basename(name)}.wire`);
-  if (!res.ok) throw new Error(`fixture が無い: ${name}`);
+  // vite は、無いファイルにも index.html を返す
+  if (!res.ok || res.headers.get("content-type")?.includes("text/html")) throw new Error(`fixture が無い: ${name}`);
   return res.arrayBuffer();
 }
 
