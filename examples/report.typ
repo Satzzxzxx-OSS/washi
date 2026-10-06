@@ -1,11 +1,11 @@
-#set document(title: "Washi 技術レポート", author: "kiwamizamurai")
+#set document(title: "Washi Technical Report", author: "kiwamizamurai")
 #set page(
   paper: "a4",
   margin: (x: 2.2cm, y: 2.6cm),
   header: context {
     if counter(page).get().first() > 1 {
       set text(size: 8.5pt, fill: luma(110))
-      [Washi 技術レポート #h(1fr) 2026-10-06]
+      [Washi Technical Report #h(1fr) 2026-10-06]
       v(-4pt)
       line(length: 100%, stroke: 0.4pt + luma(200))
     }
@@ -14,7 +14,7 @@
     #counter(page).display("1 / 1", both: true)
   ]),
 )
-#set text(font: ("Hiragino Mincho ProN", "Noto Serif CJK JP", "Libertinus Serif"), lang: "ja", size: 10.5pt)
+#set text(font: ("Libertinus Serif", "Hiragino Mincho ProN", "Noto Serif CJK JP"), lang: "en", size: 10.5pt)
 #set par(justify: true, leading: 0.85em)
 #set heading(numbering: "1.1")
 #set math.equation(numbering: "(1)")
@@ -23,7 +23,7 @@
 #show raw.where(block: true): block.with(fill: luma(247), inset: 9pt, radius: 3pt, width: 100%)
 
 #let accent = rgb("#b5483a")
-#let callout(title: "メモ", body) = block(
+#let callout(title: "Note", body) = block(
   width: 100%,
   inset: 10pt,
   radius: 3pt,
@@ -33,43 +33,43 @@
 
 #align(center)[
   #v(1cm)
-  #text(size: 24pt, weight: "bold")[Washi 技術レポート]
+  #text(size: 24pt, weight: "bold")[Washi Technical Report]
   #v(2pt)
-  #text(size: 12pt, fill: luma(100))[Typst・Markdown・LaTeX を静かに読む]
+  #text(size: 12pt, fill: luma(100))[Reading Typst, Markdown and LaTeX quietly]
   #v(6pt)
   kiwamizamurai · 2026-10-06
 ]
 
 #v(0.6cm)
-#outline(title: [目次], depth: 2, indent: 1.2em)
+#outline(title: [Contents], depth: 2, indent: 1.2em)
 #pagebreak()
 
-= 概要
+= Overview
 
-Washi は、ローカルの文書を *保存するたびに即座に再描画* する軽量ビューアです。
-Markdown は HTML として、Typst と LaTeX は PDF として表示します @knuth1984 @madje2023。
-本書は Typst の機能（見出し番号、相互参照、表、数式、図、脚注、段組み、文献）を一通り使った例です。
+Washi is a lightweight viewer that *re-renders local documents the moment you save them*.
+It shows Markdown as HTML, and Typst and LaTeX as PDF @knuth1984 @madje2023.
+This report is an example that uses most Typst features: heading numbers, cross-references, tables, math, figures, footnotes, columns and a bibliography.
 
-#callout(title: "ポイント")[
-  変換は *Renderer* という共通インターフェースの背後に隠されており、形式の追加は実装を 1 つ足して登録するだけで済みます。
+#callout(title: "Key point")[
+  Conversion is hidden behind a common interface called a *Renderer*, so adding a format takes one implementation and one registration.
 ]
 
-= アーキテクチャ <sec:arch>
+= Architecture <sec:arch>
 
-描画の流れを @fig:pipeline に、対応形式を @tbl:formats に示します。
+The rendering flow is shown in @fig:pipeline, and the supported formats in @tbl:formats.
 
 #figure(
   grid(
     columns: (1fr, auto, 1fr, auto, 1fr),
     align: horizon + center,
     gutter: 8pt,
-    rect(inset: 10pt, radius: 4pt, fill: luma(245), stroke: 0.6pt + luma(160))[ソース \ #text(size: 8pt)[.md / .typ / .tex]],
+    rect(inset: 10pt, radius: 4pt, fill: luma(245), stroke: 0.6pt + luma(160))[Source \ #text(size: 8pt)[.md / .typ / .tex]],
     text(fill: accent, size: 14pt)[→],
     rect(inset: 10pt, radius: 4pt, fill: rgb("#f6efe6"), stroke: 0.6pt + accent)[*Renderer*],
     text(fill: accent, size: 14pt)[→],
     rect(inset: 10pt, radius: 4pt, fill: luma(245), stroke: 0.6pt + luma(160))[HTML / PDF],
   ),
-  caption: [描画パイプライン],
+  caption: [The rendering pipeline],
 ) <fig:pipeline>
 
 #figure(
@@ -78,35 +78,35 @@ Markdown は HTML として、Typst と LaTeX は PDF として表示します @
     align: (left, left, right),
     stroke: (x: none, y: 0.5pt + luma(190)),
     inset: 7pt,
-    table.header([*形式*], [*描画経路*], [*目安*]),
-    [Markdown], [comrak → HTML → WebView (KaTeX / Mermaid)], [即時],
+    table.header([*Format*], [*Rendering path*], [*Time*]),
+    [Markdown], [comrak → HTML → WebView (KaTeX / Mermaid)], [Instant],
     [Typst], [typst crate → PDF → pdf.js], [~50 ms],
-    [LaTeX], [tectonic または latexmk → PDF → pdf.js], [~1 s],
-    [Mermaid], [フェンス付き Markdown として描画], [即時],
+    [LaTeX], [tectonic or latexmk → PDF → pdf.js], [~1 s],
+    [Mermaid], [Rendered as a fenced block in Markdown], [Instant],
   ),
-  caption: [対応形式と描画経路],
+  caption: [Supported formats and their rendering paths],
 ) <tbl:formats>
 
-== 設計の方針
+== Design principles
 
-- 各形式は `Renderer` トレイトを実装し、拡張子で引ける。
-- 外部コマンド（TeX エンジン）は `TexEngine` の背後に置き、テストでは差し替える。
-- 画面側は `View` インターフェースで、出力の種類ごとに表示を切り替える。
+- Each format implements the `Renderer` trait and is looked up by extension.
+- External commands (TeX engines) sit behind `TexEngine` and are swapped out in tests.
+- The UI switches views by output type through the `View` interface.
 
-== 数式
+== Math
 
-積分と総和の基本公式:
+The basic formulas for an integral and a sum:
 $ integral_0^1 x^2 dif x = 1/3, quad sum_(k=1)^n k = (n(n+1))/2 $ <eq:basic>
 
-行列式と逆行列（@eq:basic の続き）:
+A matrix and its inverse (continuing from @eq:basic):
 $ mat(a, b; c, d)^(-1) = 1/(a d - b c) mat(d, -b; -c, a) $
 
-Fourier 変換:
+The Fourier transform:
 $ hat(f)(xi) = integral_(-oo)^(oo) f(x) e^(-2 pi i x xi) dif x $
 
-= 実装メモ
+= Implementation notes
 
-== コード例
+== Code example
 
 ```rust
 pub trait Renderer: Sync {
@@ -115,26 +115,26 @@ pub trait Renderer: Sync {
 }
 ```
 
-== 段組みと脚注
+== Columns and footnotes
 
 #columns(2, gutter: 16pt)[
   #lorem(70)
-  #footnote[段組みの中でも脚注は正しくページ下部に置かれます。]
+  #footnote[Even inside columns, footnotes are placed at the bottom of the page.]
 
   #lorem(60)
 ]
 
 #v(0.4cm)
-詳しくは #link("https://typst.app/docs")[Typst ドキュメント] を参照してください（@sec:arch も参照）。
+See the #link("https://typst.app/docs")[Typst documentation] for details (see also @sec:arch).
 
 #pagebreak()
 
-= 付録
+= Appendix
 
-== 長い本文
+== Long text
 
 #lorem(180)
 
 #lorem(150)
 
-#bibliography("refs.bib", title: [参考文献], style: "ieee")
+#bibliography("refs.bib", title: [References], style: "ieee")

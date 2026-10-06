@@ -1,22 +1,22 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>和紙 Washi — Markdown・Typst・LaTeX を静かに読むビューア</title>
+    <title>Washi — a quiet viewer for Markdown, Typst and LaTeX</title>
     <meta
       name="description"
-      content="保存するたびに再描画しながら、Markdown・Typst・LaTeX・Mermaid・PDF を読む軽量ビューア。Tauri + Rust 製、MIT ライセンス。"
+      content="A lightweight viewer that re-renders on every save, for reading Markdown, Typst, LaTeX, Mermaid and PDF. Built with Tauri + Rust, MIT licensed."
     />
     <meta name="theme-color" content="#fbf9f4" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1a1917" media="(prefers-color-scheme: dark)" />
-    <meta property="og:title" content="和紙 Washi" />
-    <meta property="og:description" content="Markdown・Typst・LaTeX を、保存するたびに静かに読む。" />
+    <meta property="og:title" content="Washi (和紙)" />
+    <meta property="og:description" content="Read Markdown, Typst and LaTeX quietly, re-rendered on every save." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="assets/shot-markdown-light.jpg" />
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="alternate" hreflang="en" href="en/" />
-    <link rel="alternate" hreflang="ja" href="./" />
+    <meta property="og:image" content="../assets/shot-markdown-light.jpg" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang="ja" href="../" />
+    <link rel="alternate" hreflang="en" href="./" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -706,19 +706,19 @@
   <body>
     <header class="nav" id="nav">
       <div class="wrap">
-        <a class="brand" href="#top" aria-label="和紙 Washi">
-          <img src="favicon.svg" alt="" width="28" height="28" />
-          和紙 <small>WASHI</small>
+        <a class="brand" href="#top" aria-label="Washi">
+          <img src="../favicon.svg" alt="" width="28" height="28" />
+          Washi <small>和紙</small>
         </a>
-        <nav aria-label="メイン">
-          <a href="#features">特長</a>
-          <a href="#shots">画面</a>
-          <a href="#how">しくみ</a>
-          <a href="#compare">比較</a>
-          <a class="keep" href="#install">インストール</a>
-          <a class="keep" href="en/" hreflang="en" lang="en">EN</a>
+        <nav aria-label="Main">
+          <a href="#features">Features</a>
+          <a href="#shots">Screens</a>
+          <a href="#how">How it works</a>
+          <a href="#compare">Compare</a>
+          <a class="keep" href="#install">Install</a>
+          <a class="keep" href="../" hreflang="ja" lang="ja">日本語</a>
         </nav>
-        <button class="icon-btn" id="theme" type="button" aria-label="テーマを切り替える" title="テーマを切り替える">
+        <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme" title="Toggle theme">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="4.2" />
             <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" />
@@ -733,23 +733,23 @@
         <div class="hanko" aria-hidden="true"></div>
         <div class="wrap">
           <span class="eyebrow">Markdown · Typst · LaTeX viewer</span>
-          <h1 id="title" aria-label="保存するたびに、静かに読む。">保存するたびに、<em>静かに</em>読む。</h1>
+          <h1 id="title" aria-label="Read quietly, on every save.">Read <em>quietly</em>, on every save.</h1>
           <p class="lead">
-            Markdown・Typst・LaTeX・Mermaid・PDF を、ひとつの軽量ビューアで。編集は好きなエディタや AI エージェントに任せて、Washi は保存のたびに、スクロール位置を保ったまま描き直します。
+            Markdown, Typst, LaTeX, Mermaid and PDF in one lightweight viewer. Leave editing to your favorite editor or AI agent; Washi redraws on every save while keeping your scroll position.
           </p>
           <div class="cta">
-            <a class="btn primary magnet" href="https://github.com/kiwamizamurai/washi">GitHub で見る →</a>
-            <a class="btn ghost magnet" href="#install">インストール</a>
+            <a class="btn primary magnet" href="https://github.com/kiwamizamurai/washi">View on GitHub →</a>
+            <a class="btn ghost magnet" href="#install">Install</a>
           </div>
-          <div class="chips" aria-label="対応形式">
+          <div class="chips" aria-label="Supported formats">
             <span class="chip">.md</span><span class="chip">.typ</span><span class="chip">.tex</span><span class="chip">.mmd</span><span class="chip">.pdf</span>
-            <span class="chip">⌘V で貼り付け</span>
+            <span class="chip">Paste with ⌘V</span>
           </div>
 
           <div class="stage">
             <div class="window" id="window">
               <div class="bar"><i></i><i></i><i></i><span>showcase.md — Washi</span></div>
-              <img src="assets/shot-markdown-light.jpg" width="1221" height="641" alt="Washi で Markdown の数式とコードを表示している画面。左に目次パネル" />
+              <img src="../assets/shot-markdown-light.jpg" width="1221" height="641" alt="Washi showing Markdown math and code, with the outline panel on the left" />
             </div>
           </div>
         </div>
@@ -768,59 +768,59 @@
         <div class="wrap">
           <div class="head">
             <span class="eyebrow">Features</span>
-            <h2>読むことだけに、磨きをかける。</h2>
-            <p class="lead">書く道具ではなく、読む道具。だから起動が軽く、画面はいつも静かです。</p>
+            <h2>Polished for reading, and only reading.</h2>
+            <p class="lead">A tool for reading, not writing. That is why it starts fast and the screen stays quiet.</p>
           </div>
           <div class="bento">
             <article class="card wide reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v4.5h-4.5" /></svg>
-              <h3>保存で、すぐ再描画</h3>
-              <p>エディタで保存した瞬間に描き直し、読んでいた位置とズームはそのまま。章や参考文献、画像を別ファイルに分けていても、それらの保存で更新されます。AI エージェントがファイルを書き換えていく様子も、そのまま追えます。</p>
+              <h3>Redraws the moment you save</h3>
+              <p>It redraws as soon as your editor saves, keeping your reading position and zoom. Split chapters, bibliographies and images into separate files and saving any of them updates the view. You can follow an AI agent rewriting a file as it happens.</p>
             </article>
             <article class="card wide reveal">
               <svg class="ico" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4V3h6v1M9.5 10h5M9.5 14h5" /></svg>
-              <h3><kbd>⌘V</kbd> で貼り付けて、すぐ読む</h3>
-              <p>クリップボードの内容から Markdown・Typst・LaTeX・Mermaid を自動判定して表示。ファイルを作る必要はありません。ドロップにも対応しています。</p>
+              <h3>Paste with <kbd>⌘V</kbd> and read</h3>
+              <p>Washi detects Markdown, Typst, LaTeX or Mermaid from the clipboard and shows it. No file needed. Dropping a file works too.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M5 4l5 15 2.2-6.3L19 10.5z" /><path d="M13 13l5 5" /></svg>
-              <h3>⌘クリックでソースへ</h3>
-              <p>Typst・LaTeX の PDF を <kbd>⌘</kbd> クリックすると、エディタの該当行を開きます（Typst は行・列、LaTeX は SyncTeX）。</p>
+              <h3><kbd>⌘</kbd>-click to the source</h3>
+              <p><kbd>⌘</kbd>-click a Typst or LaTeX PDF to open the matching line in your editor (line and column for Typst, SyncTeX for LaTeX).</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12" /><circle cx="18" cy="6" r="1.2" /></svg>
-              <h3>目次と検索</h3>
-              <p>現在位置を追従する目次パネル。PDF のしおりにも対応し、<kbd>⌘F</kbd> では一致箇所まで自動でスクロールします。</p>
+              <h3>Outline and search</h3>
+              <p>An outline panel that follows your position, PDF bookmarks included. <kbd>⌘F</kbd> scrolls to each match automatically.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M5 18l4-12 3 8 2-5 5 9" /><path d="M3 20h18" /></svg>
-              <h3>数式・コード・図</h3>
-              <p>KaTeX の数式、色分けされたコード（コピーボタン付き）、Mermaid の図はクリックで拡大してドラッグ・ホイールで操作できます。</p>
+              <h3>Math, code and diagrams</h3>
+              <p>KaTeX math, highlighted code with a copy button, and Mermaid diagrams you can click to enlarge, then drag and scroll to pan and zoom.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" /></svg>
-              <h3>目に優しい</h3>
-              <p>システム・ライト・ダークのテーマ、本文幅の切替、<kbd>⌘</kbd>+/− やピンチでの拡大縮小。右から左へ書く文章も正しく表示します。</p>
+              <h3>Easy on the eyes</h3>
+              <p>System, light and dark themes, adjustable text width, and zoom with <kbd>⌘</kbd>+/− or pinch. Right-to-left text displays correctly too.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="10" rx="2" /><rect x="9" y="9" width="12" height="10" rx="2" /></svg>
-              <h3>1 ファイル 1 ウィンドウ</h3>
-              <p>複数のファイルを渡すと別ウィンドウで開きます。文書内の相対リンクは Washi の中でそのまま辿れます。</p>
+              <h3>One file, one window</h3>
+              <p>Pass several files and each opens in its own window. Relative links inside a document are followed within Washi.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 13h6M9 17h4" /></svg>
-              <h3>PDF も、そのまま</h3>
-              <p>テキストの選択・検索、しおりの目次に対応。表示付近のページだけを描くので、長い PDF も軽く開けます。</p>
+              <h3>PDF, as it is</h3>
+              <p>Text selection, search and a bookmark outline. Only pages near the viewport are drawn, so long PDFs open lightly.</p>
             </article>
             <article class="card wide reveal">
               <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9l3 3-3 3M12 15h5" /></svg>
-              <h3>エージェントから、直接開ける</h3>
-              <p><code>washi report.typ</code> で、起動を待たずに開いて戻ります。<code>--json</code> の出力、事前の検証、<code>cat draft.md | washi -</code> での標準入力にも対応。AI エージェントの出力を、すぐ目で確認できます。</p>
+              <h3>Open it straight from an agent</h3>
+              <p><code>washi report.typ</code> opens the file and returns without waiting for the app. It supports <code>--json</code> output, validation beforehand, and stdin with <code>cat draft.md | washi -</code>, so you can check an agent's output at a glance.</p>
             </article>
             <article class="card wide reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M9 12l2.2 2.2L15.5 10" /></svg>
-              <h3>手元で完結、安全側に倒す</h3>
-              <p>文書内の生の HTML は除去し、アプリには厳しめの CSP を設定。テレメトリや解析はありません。Washi 自身が通信するのは、Typst の <code>@preview</code> パッケージを取得するときだけです（外部の tectonic は、必要な TeX パッケージを自分で取得することがあります）。</p>
+              <h3>Stays on your machine, errs on the safe side</h3>
+              <p>Raw HTML inside documents is stripped and the app runs with a strict CSP. There is no telemetry or analytics. Washi itself only touches the network to fetch Typst <code>@preview</code> packages (the external tectonic may fetch TeX packages on its own).</p>
             </article>
           </div>
         </div>
@@ -830,30 +830,30 @@
         <div class="wrap">
           <div class="head">
             <span class="eyebrow">Screens</span>
-            <h2>どの形式も、同じ静けさで。</h2>
+            <h2>Every format, the same quiet.</h2>
           </div>
-          <div class="tabs" role="tablist" aria-label="スクリーンショット">
+          <div class="tabs" role="tablist" aria-label="Screenshots">
             <button class="tab" role="tab" aria-selected="true" data-target="s1">Markdown</button>
-            <button class="tab" role="tab" aria-selected="false" data-target="s2">Mermaid・ダーク</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s2">Mermaid · dark</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s3">Typst</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s4">LaTeX</button>
           </div>
           <div class="shots">
             <figure class="shot on" id="s1" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md</span></div><img loading="lazy" src="assets/shot-markdown-light.jpg" width="1221" height="641" alt="Markdown の数式とコード" /></div>
-              <figcaption>KaTeX の数式と色分けされたコード。左は現在位置を追う目次パネル。</figcaption>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md</span></div><img loading="lazy" src="../assets/shot-markdown-light.jpg" width="1221" height="641" alt="Markdown math and code" /></div>
+              <figcaption>KaTeX math and highlighted code. On the left, an outline panel that tracks your position.</figcaption>
             </figure>
             <figure class="shot" id="s2" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — ダーク</span></div><img loading="lazy" src="assets/shot-markdown-dark.jpg" width="1221" height="641" alt="ダークテーマで Mermaid の図を表示" /></div>
-              <figcaption>ダークテーマに合わせて Mermaid の配色も切り替わります。図はクリックで拡大。</figcaption>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — dark</span></div><img loading="lazy" src="../assets/shot-markdown-dark.jpg" width="1221" height="641" alt="A Mermaid diagram in the dark theme" /></div>
+              <figcaption>Mermaid colors switch with the dark theme. Click a diagram to enlarge it.</figcaption>
             </figure>
             <figure class="shot" id="s3" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>report.typ</span></div><img loading="lazy" src="assets/shot-typst.jpg" width="1221" height="641" alt="Typst のレポートを PDF として表示" /></div>
-              <figcaption>Typst はアプリに内蔵のコンパイラで直接 PDF にします。しおりが目次パネルになります。</figcaption>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>report.typ</span></div><img loading="lazy" src="../assets/shot-typst.jpg" width="1221" height="641" alt="A Typst report shown as a PDF" /></div>
+              <figcaption>Typst is compiled straight to PDF by the compiler built into the app. Bookmarks become the outline panel.</figcaption>
             </figure>
             <figure class="shot" id="s4" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="assets/shot-latex.jpg" width="1221" height="641" alt="LaTeX の論文を PDF として表示" /></div>
-              <figcaption>LaTeX は latexmk、無ければ tectonic でコンパイル。エラーは行番号つきで表示します。</figcaption>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="../assets/shot-latex.jpg" width="1221" height="641" alt="A LaTeX paper shown as a PDF" /></div>
+              <figcaption>LaTeX is compiled with latexmk, or tectonic if that is missing. Errors are shown with line numbers.</figcaption>
             </figure>
           </div>
         </div>
@@ -863,15 +863,15 @@
         <div class="wrap pipeline">
           <div>
             <span class="eyebrow">How it works</span>
-            <h2>形式の違いは、ひとつの窓口に隠す。</h2>
+            <h2>Format differences hide behind one door.</h2>
             <ol style="margin-top: 1.4rem">
-              <li><b>Renderer</b> が形式ごとの変換を受け持ち、出力は HTML か PDF のどちらかに揃います。</li>
-              <li>画面は出力の種類で表示を切り替えるだけ。新しい形式は、実装を 1 つ足して登録すれば増やせます。</li>
-              <li>TeX のような外部コマンドは差し替え可能にして、テストでは偽物を使います。</li>
-              <li>描画と CLI は Tauri に依存しない <code>washi-core</code> に分け、アプリ本体（<code>src-tauri</code>）は画面とウィンドウだけを受け持ちます。</li>
+              <li>A <b>Renderer</b> handles each format, and the output is always either HTML or PDF.</li>
+              <li>The UI only switches views by output type. To add a format, implement one Renderer and register it.</li>
+              <li>External commands such as TeX sit behind a swappable interface, and tests use fakes.</li>
+              <li>Rendering and the CLI live in <code>washi-core</code>, which does not depend on Tauri; the app itself (<code>src-tauri</code>) only handles the UI and windows.</li>
             </ol>
           </div>
-          <svg viewBox="0 0 520 330" role="img" aria-label="ソースが Renderer を通って HTML か PDF になる図">
+          <svg viewBox="0 0 520 330" role="img" aria-label="Diagram: a source passes through a Renderer and becomes HTML or PDF">
             <g>
               <rect class="node" x="10" y="20" width="130" height="46" rx="10" />
               <text x="75" y="48">.md</text>
@@ -880,7 +880,7 @@
               <rect class="node" x="10" y="164" width="130" height="46" rx="10" />
               <text x="75" y="192">.tex</text>
               <rect class="node" x="10" y="236" width="130" height="46" rx="10" />
-              <text x="75" y="264">⌘V 貼り付け</text>
+              <text x="75" y="264">⌘V paste</text>
             </g>
             <path class="wire" d="M140 43 C 200 43, 200 163, 250 163" />
             <path class="wire" d="M140 115 C 190 115, 200 163, 250 163" />
@@ -904,10 +904,10 @@
       <section style="padding-top: 0">
         <div class="wrap">
           <div class="stats" id="stats">
-            <div class="stat"><strong data-count="5">5</strong><span>対応形式<br />Markdown・Typst・LaTeX・Mermaid・PDF</span></div>
-            <div class="stat"><strong data-count="24" data-suffix=" MB">24 MB</strong><span>zip 圧縮後の実測値<br />Apple Silicon・署名は ad-hoc</span></div>
-            <div class="stat"><strong data-count="0">0</strong><span>テレメトリ・解析<br />Washi 自身の通信は @preview 取得時のみ</span></div>
-            <div class="stat"><strong>MIT</strong><span>ライセンス<br />Tauri・Rust・Typst で構築</span></div>
+            <div class="stat"><strong data-count="5">5</strong><span>formats<br />Markdown, Typst, LaTeX, Mermaid, PDF</span></div>
+            <div class="stat"><strong data-count="24" data-suffix=" MB">24 MB</strong><span>measured, zipped<br />Apple Silicon, ad-hoc signature</span></div>
+            <div class="stat"><strong data-count="0">0</strong><span>telemetry / analytics<br />Washi itself only connects to fetch @preview</span></div>
+            <div class="stat"><strong>MIT</strong><span>license<br />Built with Tauri, Rust and Typst</span></div>
           </div>
         </div>
       </section>
@@ -916,8 +916,8 @@
         <div class="wrap">
           <div class="head">
             <span class="eyebrow">Compare</span>
-            <h2>3 形式すべてを扱う、ほかのアプリと。</h2>
-            <p class="lead">Markdown・Typst・LaTeX をファイルとして開けるアプリとの比較です。書くなら Oleafly・Texpile・hibi・Quire Writer、読むなら Washi や Typeset Viewer、という住み分けだと考えています。</p>
+            <h2>Against the other apps that handle all three.</h2>
+            <p class="lead">A comparison with apps that open Markdown, Typst and LaTeX as files. To write, Oleafly, Texpile, hibi or Quire Writer; to read, Washi or Typeset Viewer. That is how we see the split.</p>
           </div>
           <div class="table-wrap reveal">
             <table>
@@ -927,24 +927,24 @@
                 </tr>
               </thead>
               <tbody>
-                <tr><th>位置づけ</th><td class="us">閲覧専用</td><td>閲覧＋ノート・レビュー</td><td>エディタ</td><td>執筆ワークスペース</td><td>ノートエディタ</td><td>AI エージェント付き執筆アプリ</td></tr>
-                <tr><th>ライセンス</th><td class="us"><span class="y">○</span> MIT</td><td><span class="n">×</span> 独自（ソース非公開）</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> GPL-3.0</td><td><span class="y">○</span> GPL-3.0</td></tr>
-                <tr><th>最新リリース</th><td class="us">0.1.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly のみ</td><td>v0.2.8</td></tr>
-                <tr><th>Markdown・Typst・LaTeX</th><td class="us"><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> アドオンで有効化</td><td><span class="y">○</span></td></tr>
-                <tr><th>Markdown に必要な外部ツール</th><td class="us">なし</td><td>Pandoc</td><td>なし</td><td>なし（Pandoc 同梱）</td><td>なし</td><td>なし</td></tr>
+                <tr><th>Role</th><td class="us">Viewer only</td><td>Viewer + notes and review</td><td>Editor</td><td>Writing workspace</td><td>Note editor</td><td>Writing app with an AI agent</td></tr>
+                <tr><th>License</th><td class="us"><span class="y">○</span> MIT</td><td><span class="n">×</span> Proprietary (closed source)</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> GPL-3.0</td><td><span class="y">○</span> GPL-3.0</td></tr>
+                <tr><th>Latest release</th><td class="us">0.1.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly only</td><td>v0.2.8</td></tr>
+                <tr><th>Markdown, Typst, LaTeX</th><td class="us"><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> enabled in Settings</td><td><span class="y">○</span></td></tr>
+                <tr><th>External tool for Markdown</th><td class="us">None</td><td>Pandoc</td><td>None</td><td>None (Pandoc bundled)</td><td>None</td><td>None</td></tr>
                 <tr><th>Mermaid</th><td class="us"><span class="y">○</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="y">○</span></td><td><span class="q">?</span></td></tr>
-                <tr><th>外部エディタの保存を自動反映</th><td class="us"><span class="y">○</span> 位置を維持（include・.bib・画像も監視）</td><td><span class="y">○</span> 位置を維持（include・.bib も監視）</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td></tr>
-                <tr><th>入力中のライブプレビュー</th><td class="us"><span class="n">×</span> 編集機能を持たないため</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> 横並び表示</td><td><span class="y">○</span></td></tr>
-                <tr><th>組み込みエディタ</th><td class="us"><span class="n">×</span> 意図的に持たない</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
-                <tr><th>PDF → ソースへジャンプ</th><td class="us"><span class="y">○</span> Typst・LaTeX</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td><td><span class="y">○</span> SyncTeX・tinymist</td><td><span class="q">?</span> 記載なし</td><td><span class="y">○</span> Typst は tinymist</td></tr>
-                <tr><th>LaTeX エンジン</th><td class="us">別途（tectonic / latexmk。Homebrew なら tectonic も入る）</td><td>別途（latexmk）</td><td>別途（TeX ディストリビューション）</td><td><span class="y">○</span> Tectonic を同梱</td><td>別途 Tectonic</td><td>別途（latexmk）</td></tr>
-                <tr><th>macOS の配布サイズ</th><td class="us">24 MB（zip）</td><td>28 MB（zip）</td><td><span class="q">?</span></td><td>191 MB（dmg）</td><td><span class="q">?</span> リリースなし</td><td>56 MB（dmg）</td></tr>
-                <tr><th>対応 OS</th><td class="us">macOS（他は未検証）</td><td>macOS 14+（Apple Silicon）</td><td>Windows・macOS・Linux</td><td>Windows・macOS・Linux</td><td>Windows・macOS</td><td>macOS（Linux は実験的）</td></tr>
+                <tr><th>Auto-refresh on external save</th><td class="us"><span class="y">○</span> keeps position (also includes, .bib, images)</td><td><span class="y">○</span> keeps position (also watches includes, .bib)</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td></tr>
+                <tr><th>Live preview while typing</th><td class="us"><span class="n">×</span> no editor</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> side by side</td><td><span class="y">○</span></td></tr>
+                <tr><th>Built-in editor</th><td class="us"><span class="n">×</span> deliberately none</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
+                <tr><th>PDF → source jump</th><td class="us"><span class="y">○</span> Typst, LaTeX</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="y">○</span> SyncTeX, tinymist</td><td><span class="q">?</span> not documented</td><td><span class="y">○</span> tinymist for Typst</td></tr>
+                <tr><th>LaTeX engine</th><td class="us">External (tectonic / latexmk; Homebrew installs tectonic)</td><td>External (latexmk)</td><td>External (TeX distribution)</td><td><span class="y">○</span> Tectonic bundled</td><td>External Tectonic</td><td>External (latexmk)</td></tr>
+                <tr><th>macOS download size</th><td class="us">24 MB (zip)</td><td>28 MB (zip)</td><td><span class="q">?</span></td><td>191 MB (dmg)</td><td><span class="q">?</span> no releases</td><td>56 MB (dmg)</td></tr>
+                <tr><th>OS</th><td class="us">macOS (others untested)</td><td>macOS 14+ (Apple Silicon)</td><td>Windows, macOS, Linux</td><td>Windows, macOS, Linux</td><td>Windows, macOS</td><td>macOS (Linux experimental)</td></tr>
               </tbody>
             </table>
           </div>
           <p class="note">
-            2026-10-06 に GitHub（リポジトリ・リリース・README）と各公式サイトで確認しました。「?」は README・公式サイトに書かれておらず確認できなかった項目で、「機能がない」という意味ではありません。Washi のサイズは自前のビルドで実測した zip、他は配布物（形式が違うため目安です）。Typst と LaTeX の片方だけ、あるいは Markdown だけのアプリは <a href="https://github.com/kiwamizamurai/washi#comparison-with-other-apps">README</a> にまとめています。
+            Checked on 2026-10-06 against GitHub (repositories, releases, READMEs) and each official site. "?" marks an item the README or site does not say, so we could not confirm it; it does not mean the feature is absent. Washi's size is a zip of our own build; the others are their published downloads (formats differ, so treat them as a rough guide). Apps that handle only some of the formats are listed in the <a href="https://github.com/kiwamizamurai/washi/blob/main/README.md#comparison-with-other-apps">README</a>.
           </p>
         </div>
       </section>
@@ -953,30 +953,30 @@
         <div class="wrap">
           <div class="head">
             <span class="eyebrow">Get started</span>
-            <h2>Homebrew で、1 行で入ります。</h2>
-            <p class="lead">Apple Silicon の macOS 向けです。<code>washi</code> コマンドと、LaTeX 用の tectonic も一緒に入ります。署名・公証は未対応なので、Cask が隔離属性を外します。</p>
+            <h2>One line with Homebrew.</h2>
+            <p class="lead">For Apple Silicon macOS. The <code>washi</code> command and tectonic (for LaTeX) are installed together. Washi is not signed or notarized, so the Cask removes the quarantine attribute.</p>
           </div>
           <div class="code reveal">
-            <button class="copy" type="button" id="copy">コピー</button>
-<pre id="cmd"><span class="c"># Homebrew で入れる（Apple Silicon）</span>
+            <button class="copy" type="button" id="copy">Copy</button>
+<pre id="cmd"><span class="c"># Install with Homebrew (Apple Silicon)</span>
 <span class="p">$</span> brew install --cask kiwamizamurai/tap/washi
 <span class="p">$</span> washi report.typ notes.md
 
-<span class="c"># ソースから動かす</span>
+<span class="c"># Run from source</span>
 <span class="p">$</span> git clone https://github.com/kiwamizamurai/washi
 <span class="p">$</span> cd washi &amp;&amp; pnpm install
 <span class="p">$</span> pnpm tauri dev -- -- --gui examples/showcase.md
 
-<span class="c"># アプリを作る（target/release/bundle/macos/Washi.app）</span>
+<span class="c"># Build the app (target/release/bundle/macos/Washi.app)</span>
 <span class="p">$</span> pnpm release</pre>
           </div>
           <ul class="keys reveal">
-            <li>開く <span><kbd>⌘</kbd> <kbd>O</kbd></span></li>
-            <li>貼り付けて開く <span><kbd>⌘</kbd> <kbd>V</kbd></span></li>
-            <li>検索 <span><kbd>⌘</kbd> <kbd>F</kbd></span></li>
-            <li>目次の表示 <span><kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>O</kbd></span></li>
-            <li>拡大・縮小 <span><kbd>⌘</kbd> <kbd>+</kbd> / <kbd>−</kbd></span></li>
-            <li>ソースへジャンプ <span><kbd>⌘</kbd> クリック</span></li>
+            <li>Open <span><kbd>⌘</kbd> <kbd>O</kbd></span></li>
+            <li>Paste and open <span><kbd>⌘</kbd> <kbd>V</kbd></span></li>
+            <li>Find <span><kbd>⌘</kbd> <kbd>F</kbd></span></li>
+            <li>Toggle outline <span><kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>O</kbd></span></li>
+            <li>Zoom in / out <span><kbd>⌘</kbd> <kbd>+</kbd> / <kbd>−</kbd></span></li>
+            <li>Jump to source <span><kbd>⌘</kbd> click</span></li>
           </ul>
         </div>
       </section>
@@ -1054,11 +1054,11 @@
           const text = $("#cmd").innerText.replace(/^\$ /gm, "");
           try {
             await navigator.clipboard.writeText(text);
-            copy.textContent = "コピーしました";
+            copy.textContent = "Copied";
           } catch {
-            copy.textContent = "失敗しました";
+            copy.textContent = "Failed";
           }
-          setTimeout(() => (copy.textContent = "コピー"), 1400);
+          setTimeout(() => (copy.textContent = "Copy"), 1400);
         });
 
         if (!window.gsap || !window.ScrollTrigger) return;

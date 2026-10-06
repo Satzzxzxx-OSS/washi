@@ -1,54 +1,54 @@
 ---
-title: Washi ショーケース
+title: Washi Showcase
 author: kiwamizamurai
 tags: [markdown, math, mermaid]
 ---
 
-# Washi ショーケース
+# Washi Showcase
 
-和紙のように静かに読める viewer です。このファイルは **Markdown の主要機能** を一通り使っています。
-別の例へのリンク: [Typst レポート](report.typ) · [LaTeX 論文](paper.tex) · [Mermaid 図](architecture.mmd)（クリックで Washi 内で開きます）。
-外部リンク: <https://typst.app> はブラウザで開きます。
+A viewer you can read as quietly as washi paper. This file uses most of the **main Markdown features**.
+Links to other examples: [Typst report](report.typ) · [LaTeX paper](paper.tex) · [Mermaid diagram](architecture.mmd) (they open inside Washi when clicked).
+External links such as <https://typst.app> open in your browser.
 
-## 1. 文章とインライン要素
+## 1. Text and inline elements
 
-日本語と English が混在する段落でも、行間と禁則は崩れません。**強調**、*斜体*、~~取り消し~~、`inline code`、上付き x^2^、
-自動リンク https://example.com、脚注[^note] を使えます。価格の \$5 や \$10 はバックスラッシュで数式と区別でき、$E = mc^2$ は数式になります。
+Paragraphs that mix scripts keep their line spacing and line breaking. You can use **bold**, *italic*, ~~strikethrough~~, `inline code`, superscripts like x^2^,
+autolinks like https://example.com, and footnotes[^note]. Prices such as \$5 or \$10 are told apart from math with a backslash, while $E = mc^2$ becomes a formula.
 
-> 引用は少し色を落として表示します。
+> Quotes are shown in a slightly softer color.
 >
-> > 入れ子の引用もこの通り。
+> > Nested quotes work the same way.
 
-[^note]: 脚注は文末にまとめられ、本文へ戻るリンクが付きます。
+[^note]: Footnotes are collected at the end, each with a link back to the text.
 
-## 2. リストとタスク
+## 2. Lists and tasks
 
-1. 手順その 1
-   - 入れ子の箇条書き
-   - もう一つ
-     1. さらに入れ子の番号付き
-     2. 二つ目
-2. 手順その 2
+1. Step one
+   - A nested bullet
+   - Another one
+     1. A nested numbered item
+     2. The second one
+2. Step two
 
-- [x] ファイルを開く
-- [x] 保存時に自動で再描画
-- [ ] Quick Look 拡張（未実装）
+- [x] Open a file
+- [x] Re-render automatically on save
+- [ ] Quick Look extension (not implemented)
 
-用語
-: 定義リストも使えます。
+Term
+: Definition lists work too.
 
-## 3. 表
+## 3. Tables
 
-| 形式 | 描画 | 速度 | 備考 |
-|:-----|:----:|-----:|------|
-| Markdown | HTML | 即時 | KaTeX・Mermaid 対応 |
-| Typst | PDF | ~50 ms | `@preview` パッケージ可 |
+| Format | Rendered as | Speed | Notes |
+|:-------|:-----------:|------:|-------|
+| Markdown | HTML | Instant | KaTeX and Mermaid supported |
+| Typst | PDF | ~50 ms | `@preview` packages work |
 | LaTeX | PDF | ~1 s | tectonic / latexmk |
-| Mermaid | SVG | 即時 | 図はクリックで拡大 |
+| Mermaid | SVG | Instant | Click a diagram to enlarge it |
 
-## 4. 数式
+## 4. Math
 
-インライン: $\int_0^1 x^2\,dx = \tfrac13$、$\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$。
+Inline: $\int_0^1 x^2\,dx = \tfrac13$, $\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$.
 
 $$
 \begin{aligned}
@@ -63,7 +63,7 @@ $$
 \begin{pmatrix} a & b \\ c & d \end{pmatrix}^{-1} = \frac{1}{ad-bc}\begin{pmatrix} d & -b \\ -c & a \end{pmatrix}
 $$
 
-## 5. コード
+## 5. Code
 
 ```rust
 use std::path::Path;
@@ -84,12 +84,12 @@ const decode = (wire: Uint8Array): Output =>
 from pathlib import Path
 
 def render(path: Path) -> str:
-    # 日本語コメントも崩れません
+    # Comments in any language are fine
     return path.read_text(encoding="utf-8")
 ```
 
 ```bash
-brew install --cask washi && washi examples/showcase.md examples/report.typ
+brew install --cask kiwamizamurai/tap/washi && washi examples/showcase.md examples/report.typ
 ```
 
 ```diff
@@ -97,7 +97,7 @@ brew install --cask washi && washi examples/showcase.md examples/report.typ
 + fn render(path: &Path) -> Result<Output, String>
 ```
 
-## 6. 図（クリックで拡大）
+## 6. Diagrams (click to enlarge)
 
 ```mermaid
 flowchart LR
@@ -105,7 +105,7 @@ flowchart LR
     A[.md] --> R
     B[.typ] --> R
     C[.tex] --> R
-    D[貼り付け] --> R
+    D[Paste] --> R
   end
   R{Renderer} -->|HTML| H[WebView]
   R -->|PDF| P[pdf.js]
@@ -113,45 +113,45 @@ flowchart LR
 
 ```mermaid
 sequenceDiagram
-  participant U as ユーザー
+  participant U as User
   participant W as Washi
-  participant E as エディタ
-  U->>E: 保存
-  E-->>W: ファイル変更を検知
-  W->>W: 再描画（スクロール位置を維持）
-  W-->>U: 更新された表示
+  participant E as Editor
+  U->>E: Save
+  E-->>W: File change detected
+  W->>W: Re-render (keeps the scroll position)
+  W-->>U: Updated view
 ```
 
 ```mermaid
 gantt
-  title Washi ロードマップ
+  title Washi roadmap
   dateFormat  YYYY-MM-DD
-  section コア
-  Renderer 抽象化     :done, a1, 2026-10-05, 1d
-  Typst 診断の整形    :done, a2, after a1, 1d
-  section 配布
-  署名と公証          :active, b1, 2026-10-08, 3d
-  Homebrew cask       :b2, after b1, 2d
+  section Core
+  Renderer abstraction   :done, a1, 2026-10-05, 1d
+  Tidy Typst diagnostics :done, a2, after a1, 1d
+  section Distribution
+  Signing and notarization :active, b1, 2026-10-08, 3d
+  Homebrew cask            :b2, after b1, 2d
 ```
 
-## 7. 画像
+## 7. Images
 
-相対パスの画像は自動で埋め込まれます。
+Images with a relative path are embedded automatically.
 
-![変換パイプライン](assets/pipeline.svg)
+![Conversion pipeline](assets/pipeline.svg)
 
-## 8. 注意書き
+## 8. Admonitions
 
 > [!NOTE]
-> 補足情報はこのように表示されます。
+> Extra information looks like this.
 
 > [!TIP]
-> 貼り付け (⌘V) でも、ファイルのドロップでも開けます。
+> You can open files by pasting (⌘V) or by dropping them.
 
 > [!WARNING]
-> 生の HTML は安全のため除去されます: <script>alert(1)</script>
+> Raw HTML is removed for safety: <script>alert(1)</script>
 
-## 9. 右から左の文章
+## 9. Right-to-left text
 
 هذا نص عربي لاختبار اتجاه الكتابة من اليمين إلى اليسار داخل المستند.
 
@@ -159,4 +159,4 @@ gantt
 
 ---
 
-*最後に: 検索は ⌘F、ズームは ⌘+ / ⌘−、印刷は ⌘P です。*
+*Finally: ⌘F searches, ⌘+ / ⌘− zooms, and ⌘P prints.*

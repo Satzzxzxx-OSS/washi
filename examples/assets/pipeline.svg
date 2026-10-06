@@ -2,7 +2,7 @@
   <rect width="640" height="160" rx="12" fill="#fbf9f4" stroke="#e3dfd3"/>
   <g font-family="Hiragino Sans, sans-serif" font-size="15" text-anchor="middle">
     <rect x="24" y="52" width="120" height="56" rx="8" fill="#f1eee5" stroke="#b5483a"/>
-    <text x="84" y="86" fill="#2b2a27">ソース</text>
+    <text x="84" y="86" fill="#2b2a27">Source</text>
     <rect x="260" y="52" width="120" height="56" rx="8" fill="#f1eee5" stroke="#b5483a"/>
     <text x="320" y="86" fill="#2b2a27">Renderer</text>
     <rect x="496" y="52" width="120" height="56" rx="8" fill="#f1eee5" stroke="#b5483a"/>
