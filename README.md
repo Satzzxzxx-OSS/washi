@@ -92,7 +92,7 @@ cargo test --workspace  # Rust tests (cargo test -p washi-core skips Tauri and i
 pnpm release            # release build of the .app
 ```
 
-Rendering and the CLI live in `crates/washi-core` (no Tauri dependency); the app is `src-tauri` plus `src` (TypeScript). To add a format, implement `Renderer` in `crates/washi-core/src/render/`, add it to `RENDERERS` in `render/mod.rs`, and add its extensions to `fileAssociations` in `src-tauri/tauri.conf.json`. A `v*` tag push runs `.github/workflows/release.yml`: it builds the `.app`, publishes a GitHub Release, and updates the Homebrew tap.
+Rendering and the CLI live in `crates/washi-core` (no Tauri dependency); the app is `src-tauri` plus `src` (TypeScript). To add a format, implement `Renderer` in `crates/washi-core/src/render/`, add it to `RENDERERS` in `render/mod.rs`, and add its extensions to `fileAssociations` in `src-tauri/tauri.conf.json`. Publishing a GitHub Release (`gh release create v0.1.0 --generate-notes`) runs `.github/workflows/release.yml`: it builds the `.app` for that tag, attaches it to the release, and updates the Homebrew tap. CI (`ci.yml`) runs only when started by hand.
 
 ## License
 

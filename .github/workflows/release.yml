@@ -1,13 +1,21 @@
 name: Release
 
-# v* タグを push すると、.app をビルドして GitHub Release に載せ、Homebrew tap の Cask を更新する。
-#   git tag v0.1.0 && git push origin v0.1.0
+# GitHub Release を公開（publish）すると、そのタグの .app をビルドして Release に添付し、Homebrew tap の Cask を更新する。
+#   gh release create v0.1.0 --title "Washi 0.1.0" --generate-notes
+# タグは v<major>.<minor>.<patch> で、package.json / tauri.conf.json / src-tauri/Cargo.toml のバージョンと一致させる。
+# 失敗したときは、Release とタグを消して直し、作り直す（または Actions から tag を指定して手動で再実行する）。
 # 事前に必要なもの: リポジトリの secret HOMEBREW_TAP_TOKEN
 #   （kiwamizamurai/homebrew-tap に contents:write できる fine-grained PAT）
 
 on:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "ビルドして添付する既存の Release のタグ（例: v0.1.0）"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -19,12 +27,18 @@ env:
 jobs:
   release:
     runs-on: macos-15 # Apple Silicon
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       - name: タグとバージョンの一致を確認
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          # タグはシェルに渡るので、形を先に確かめる
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "タグが v<major>.<minor>.<patch> の形ではありません: $TAG"; exit 1; }
+          version="${TAG#v}"
           package=$(node -p "require('./package.json').version")
           tauri=$(node -p "require('./src-tauri/tauri.conf.json').version")
           crate=$(sed -n 's/^version = "\(.*\)"/\1/p' src-tauri/Cargo.toml | head -1)
@@ -51,27 +65,25 @@ jobs:
       - name: zip と sha256 を作る
         id: pack
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           asset="Washi-${version}-aarch64.zip"
           ditto -c -k --sequesterRsrc --keepParent target/release/bundle/macos/Washi.app "$asset"
           shasum -a 256 "$asset" | cut -d' ' -f1 > "$asset.sha256"
           echo "asset=$asset" >> "$GITHUB_OUTPUT"
           echo "sha256=$(cat "$asset.sha256")" >> "$GITHUB_OUTPUT"
 
-      - name: GitHub Release を作る
+      - name: Release に添付する
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "$GITHUB_REF_NAME" \
-            "${{ steps.pack.outputs.asset }}" "${{ steps.pack.outputs.asset }}.sha256" \
-            --title "Washi ${GITHUB_REF_NAME#v}" --generate-notes --verify-tag
+          ASSET: ${{ steps.pack.outputs.asset }}
+        run: gh release upload "$TAG" "$ASSET" "$ASSET.sha256" --clobber
 
       - name: Homebrew tap の Cask を更新
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           [ -n "$TAP_TOKEN" ] || { echo "HOMEBREW_TAP_TOKEN が未設定です"; exit 1; }
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           sha256="${{ steps.pack.outputs.sha256 }}"
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
           mkdir -p tap/Casks

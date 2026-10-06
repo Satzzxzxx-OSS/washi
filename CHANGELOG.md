@@ -12,7 +12,7 @@ The `washi` command-line interface (the `--json` output, exit codes, and the std
 - Re-rendering when files a document includes change: LaTeX `\input` / `\include` / `\bibliography` / `\addbibresource` / `\includegraphics`, Typst `#include` / `#import` / `#image` / `#bibliography` and data files, and Markdown images, including those in subfolders.
 - LaTeX builds stop after `WASHI_COMPILE_TIMEOUT` seconds (default 300), including the processes they started, and a newer render of the same file stops an older one.
 - Finder registration for `.mmd`, `.mermaid`, `.pdf`, `.latex` and `.mdown`.
-- GitHub Actions: CI (`ci.yml`) and a release workflow (`release.yml`) that publishes a GitHub Release and updates the Homebrew tap.
+- GitHub Actions: a release workflow (`release.yml`) that, when a GitHub Release is published, builds the app, attaches it to the release and updates the Homebrew tap, and a CI workflow (`ci.yml`) that runs only on demand.
 
 ### Changed
 - `washi --json` results list `files` (each with `path` and `format`) instead of `opened`.

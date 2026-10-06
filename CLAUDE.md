@@ -57,8 +57,8 @@ pnpm dev
 
 ## CI とリリース
 
-- `.github/workflows/ci.yml`: `washi-core` のテスト（Linux、Tauri なし）とアプリ全体のテスト・ビルド（macOS）。
-- `.github/workflows/release.yml`: `v*` タグで起動。タグと `package.json` / `tauri.conf.json` / `src-tauri/Cargo.toml` のバージョンが一致しないと失敗する。`pnpm release` で `.app` を作り、`Washi-<version>-aarch64.zip` と `.sha256` を GitHub Release に載せ、`kiwamizamurai/homebrew-tap` の `Casks/washi.rb` を生成して push する（secret `HOMEBREW_TAP_TOKEN` が必要）。
+- `.github/workflows/ci.yml`: `washi-core` のテスト（Linux、Tauri なし）とアプリ全体のテスト・ビルド（macOS）。毎回は走らせない方針なので、手動実行（`workflow_dispatch`）のみ。
+- `.github/workflows/release.yml`: GitHub Release を公開（publish）すると起動する（`gh release create v0.1.0 --generate-notes` など）。そのタグを checkout し、タグが `v<major>.<minor>.<patch>` の形で、`package.json` / `tauri.conf.json` / `src-tauri/Cargo.toml` のバージョンと一致しないと失敗する。`pnpm release` で `.app` を作り、`Washi-<version>-aarch64.zip` と `.sha256` を、公開済みの Release に `gh release upload` で添付し、`kiwamizamurai/homebrew-tap` の `Casks/washi.rb` を生成して push する（secret `HOMEBREW_TAP_TOKEN` が必要）。Actions から `tag` を指定して手動で再実行もできる。
 - 配布は Apple Silicon の macOS のみ。ad-hoc 署名なので Cask の `postflight` で quarantine を外している。LaTeX エンジンは同梱せず、Cask の `depends_on formula: "tectonic"` で入れる。
 - ワークフローはまだ GitHub 上で実行していない（Cask 生成部分だけローカルで再現して構文を確認した）。
 

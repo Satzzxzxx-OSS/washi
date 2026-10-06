@@ -1,9 +1,7 @@
 name: CI
 
+# 毎回は走らせない。確認したいときに、Actions から手動で実行する。
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 concurrency:
