@@ -1,11 +1,11 @@
 name: Release
 
-# GitHub Release を公開（publish）すると、そのタグの .app をビルドして Release に添付し、Homebrew tap の Cask を更新する。
+# When a GitHub Release is published, build the .app for its tag, attach it to the release, and update the Cask in the Homebrew tap.
 #   gh release create v0.1.0 --title "Washi 0.1.0" --generate-notes
-# タグは v<major>.<minor>.<patch> で、package.json / tauri.conf.json / src-tauri/Cargo.toml のバージョンと一致させる。
-# 失敗したときは、Release とタグを消して直し、作り直す（または Actions から tag を指定して手動で再実行する）。
-# tap の更新に必要なもの: リポジトリの secret HOMEBREW_TAP_TOKEN
-#   （kiwamizamurai/homebrew-tap に contents:write できる fine-grained PAT）。未設定なら tap の更新だけ警告つきで飛ばす。
+# The tag must be v<major>.<minor>.<patch> and match the versions in package.json, tauri.conf.json and src-tauri/Cargo.toml.
+# If it fails, delete the release and the tag, fix the problem and cut the release again (or re-run by hand from the Actions tab with a tag).
+# The tap update needs the repository secret HOMEBREW_TAP_TOKEN
+#   (a fine-grained PAT with contents:write on kiwamizamurai/homebrew-tap). Without it, only the tap update is skipped, with a warning.
 
 on:
   release:
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "ビルドして添付する既存の Release のタグ（例: v0.1.0）"
+        description: "Tag of an existing release to build and attach to (e.g. v0.1.0)"
         required: true
         type: string
 
@@ -34,10 +34,10 @@ jobs:
         with:
           ref: ${{ env.TAG }}
 
-      - name: タグとバージョンの一致を確認
+      - name: Check that the tag matches the versions
         run: |
-          # タグはシェルに渡るので、形を先に確かめる
-          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "タグが v<major>.<minor>.<patch> の形ではありません: $TAG"; exit 1; }
+          # The tag reaches the shell, so check its shape first
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "The tag is not in the form v<major>.<minor>.<patch>: $TAG"; exit 1; }
           version="${TAG#v}"
           package=$(node -p "require('./package.json').version")
           tauri=$(node -p "require('./src-tauri/tauri.conf.json').version")
@@ -59,10 +59,10 @@ jobs:
       - run: pnpm test
       - run: cargo test --workspace
 
-      # ローカルのパスを埋め込まないよう置換して .app を作る（scripts/release.sh）
+      # Build the .app without embedding local paths (scripts/release.sh)
       - run: pnpm release
 
-      - name: zip と sha256 を作る
+      - name: Make the zip and its sha256
         id: pack
         run: |
           version="${TAG#v}"
@@ -72,13 +72,13 @@ jobs:
           echo "asset=$asset" >> "$GITHUB_OUTPUT"
           echo "sha256=$(cat "$asset.sha256")" >> "$GITHUB_OUTPUT"
 
-      - name: Release に添付する
+      - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
           ASSET: ${{ steps.pack.outputs.asset }}
         run: gh release upload "$TAG" "$ASSET" "$ASSET.sha256" --clobber
 
-      - name: Homebrew tap の Cask を更新
+      - name: Update the Cask in the Homebrew tap
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
@@ -101,15 +101,15 @@ jobs:
             homepage "https://github.com/kiwamizamurai/washi"
 
             depends_on arch: :arm64
-            # LaTeX の描画に使う（latexmk が PATH にあればそちらを優先する）
+            # Renders LaTeX (latexmk is used instead when it is on the PATH)
             depends_on formula: "tectonic"
             depends_on :macos
 
             app "Washi.app"
-            # washi コマンドを PATH に置く（ターミナルや AI エージェントから開ける）
+            # Puts the washi command on the PATH (usable from a terminal or an AI agent)
             binary "#{appdir}/Washi.app/Contents/MacOS/washi"
 
-            # 署名・公証は未対応（ad-hoc 署名）。Homebrew が付ける隔離属性を外して、初回起動の警告を避ける
+            # Not signed or notarized (ad-hoc signature): remove the quarantine attribute Homebrew adds, to avoid the first-launch warning
             postflight_steps do
               run "/usr/bin/xattr",
                   args:           ["-dr", "com.apple.quarantine", "{{appdir}}/Washi.app"],

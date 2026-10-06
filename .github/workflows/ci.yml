@@ -1,6 +1,6 @@
 name: CI
 
-# 毎回は走らせない。確認したいときに、Actions から手動で実行する。
+# Not run on every push. Start it by hand from the Actions tab when you want a check.
 on:
   workflow_dispatch:
 
@@ -12,7 +12,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # washi-core は Tauri に依存しないので、Linux で WebKit 抜きのまま速く回せる
+  # washi-core does not depend on Tauri, so it runs quickly on Linux without WebKit
   core:
     runs-on: ubuntu-latest
     steps:
