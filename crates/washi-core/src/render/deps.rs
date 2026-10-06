@@ -102,6 +102,14 @@ fn strip_tex_comments(source: &str) -> String {
         .join("\n")
 }
 
+/// 主ファイルで、保存前の本文があればそれを、そうでなければディスクのファイルを読む
+fn read_source(file: &Path, main: &Path, main_text: Option<&str>) -> Option<String> {
+    match main_text {
+        Some(text) if file == main => Some(text.to_owned()),
+        _ => fs::read_to_string(file).ok(),
+    }
+}
+
 fn rooted(root: &Path, target: &str) -> PathBuf {
     let target = Path::new(target.trim());
     if target.is_absolute() {
@@ -124,6 +132,11 @@ fn tex_file(root: &Path, target: &str) -> PathBuf {
 }
 
 pub fn latex(main: &Path) -> Vec<PathBuf> {
+    latex_text(main, None)
+}
+
+/// `main_text` は、保存前の本文。あれば、ディスクの主ファイルの代わりに走査する
+pub fn latex_text(main: &Path, main_text: Option<&str>) -> Vec<PathBuf> {
     // TeX は読み込み先を、最初に開いた文書のあるフォルダを基準に解決する
     let root = main.parent().unwrap_or(Path::new("."));
     let mut dirs = Vec::new();
@@ -134,7 +147,7 @@ pub fn latex(main: &Path) -> Vec<PathBuf> {
         if visited.len() >= MAX_FILES || !visited.insert(file.clone()) {
             continue;
         }
-        let Ok(source) = fs::read_to_string(&file) else { continue };
+        let Some(source) = read_source(&file, main, main_text) else { continue };
         let source = strip_tex_comments(&source);
 
         for caps in TEX_COMMAND.captures_iter(&source) {
@@ -178,6 +191,11 @@ static TYPST_PATH: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 pub fn typst(main: &Path) -> Vec<PathBuf> {
+    typst_text(main, None)
+}
+
+/// `main_text` は、保存前の本文。あれば、ディスクの主ファイルの代わりに走査する
+pub fn typst_text(main: &Path, main_text: Option<&str>) -> Vec<PathBuf> {
     // Typst は `/` から始まるパスをプロジェクトのルート（開いた文書のフォルダ）から、
     // それ以外を読み込んでいるファイルのフォルダから解決する
     let root = main.parent().unwrap_or(Path::new("."));
@@ -189,7 +207,7 @@ pub fn typst(main: &Path) -> Vec<PathBuf> {
         if visited.len() >= MAX_FILES || !visited.insert(file.clone()) {
             continue;
         }
-        let Ok(source) = fs::read_to_string(&file) else { continue };
+        let Some(source) = read_source(&file, main, main_text) else { continue };
         let here = file.parent().unwrap_or(root);
 
         for caps in TYPST_PATH.captures_iter(&source) {
@@ -378,5 +396,22 @@ mod tests {
         p.file("a/x", "");
         let dirs = directories(vec![p.dir("a/../a"), p.dir("a"), p.dir("a/.")]);
         assert_eq!(dirs, vec![p.dir("a")]);
+    }
+
+    #[test]
+    fn latex_scans_the_unsaved_text_instead_of_the_file_on_disk() {
+        let p = Project::new("tex-buffer");
+        p.file("chapters/one.tex", "");
+        let main = p.file("main.tex", "nothing yet");
+        assert!(latex(&main).is_empty() || latex(&main) == vec![p.0.clone()]);
+        assert_eq!(latex_text(&main, Some("\\input{chapters/one}")), vec![p.dir("chapters")]);
+    }
+
+    #[test]
+    fn typst_scans_the_unsaved_text_instead_of_the_file_on_disk() {
+        let p = Project::new("typ-buffer");
+        p.file("parts/a.typ", "");
+        let main = p.file("main.typ", "= plain");
+        assert_eq!(typst_text(&main, Some("#include \"parts/a.typ\"")), vec![p.dir("parts")]);
     }
 }

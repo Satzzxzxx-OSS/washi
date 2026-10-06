@@ -6,7 +6,7 @@ use std::{
 use base64::Engine as _;
 use comrak::{format_html, nodes::NodeValue, parse_document, Arena, Options};
 
-use super::{autolink, Output, Renderer};
+use super::{autolink, deps, Output, Rendered, Renderer};
 
 const MAX_INLINE_IMAGE: u64 = 10 * 1024 * 1024;
 
@@ -32,7 +32,17 @@ impl Renderer for MarkdownRenderer {
 
     fn dependency_dirs(&self, path: &Path) -> Vec<PathBuf> {
         let Ok(source) = fs::read_to_string(path) else { return Vec::new() };
-        super::deps::markdown(&source, path.parent().unwrap_or(Path::new(".")))
+        deps::markdown(&source, path.parent().unwrap_or(Path::new(".")))
+    }
+
+    fn render_buffer(&self, path: &Path, text: &str) -> Rendered {
+        // 位置合わせのために、要素に data-sourcepos（行:列-行:列）を付ける。読むモードの出力は変えない
+        let output = to_html_with(text, Some(path.parent().unwrap_or(Path::new("."))), true).map(Output::Html);
+        Rendered { output, diagnostics: Vec::new() }
+    }
+
+    fn buffer_dependency_dirs(&self, path: &Path, text: &str) -> Vec<PathBuf> {
+        deps::markdown(text, path.parent().unwrap_or(Path::new(".")))
     }
 }
 
@@ -40,8 +50,9 @@ pub(super) fn render_source(source: &str, base: Option<&Path>) -> Result<Output,
     to_html(source, base).map(Output::Html)
 }
 
-fn options() -> Options<'static> {
+fn options(sourcepos: bool) -> Options<'static> {
     let mut options = Options::default();
+    options.render.sourcepos = sourcepos;
     options.extension.strikethrough = true;
     options.extension.table = true;
     options.extension.tasklist = true;
@@ -57,7 +68,11 @@ fn options() -> Options<'static> {
 }
 
 fn to_html(source: &str, base: Option<&Path>) -> Result<String, String> {
-    let options = options();
+    to_html_with(source, base, false)
+}
+
+fn to_html_with(source: &str, base: Option<&Path>, sourcepos: bool) -> Result<String, String> {
+    let options = options(sourcepos);
     let arena = Arena::new();
     let root = parse_document(&arena, source, &options);
     autolink::link_ascii_urls(&arena, root);
@@ -193,5 +208,76 @@ mod tests {
         assert!(out.contains("https://example.com/b.png"), "{out}");
         assert!(out.contains("missing.png"), "{out}");
     }
-}
 
+    fn project(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("washi-md-buf-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(dir.join("assets")).unwrap();
+        fs::write(dir.join("assets/a.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\"/>").unwrap();
+        dir
+    }
+
+    fn html_of(rendered: Rendered) -> String {
+        match rendered.output.expect("描画できる") {
+            Output::Html(h) => h,
+            Output::Pdf(_) => panic!("HTML を期待"),
+        }
+    }
+
+    #[test]
+    fn a_buffer_embeds_relative_images_like_the_saved_file() {
+        let dir = project("img");
+        let path = dir.join("doc.md");
+        let out = html_of(MarkdownRenderer.render_buffer(&path, "![x](assets/a.svg)\n"));
+        assert!(out.contains("data:image/svg+xml;base64,"), "{out}");
+    }
+
+    #[test]
+    fn a_buffer_marks_elements_with_their_source_lines_but_the_saved_render_does_not() {
+        let dir = project("pos");
+        let path = dir.join("doc.md");
+        let text = "# Title\n\nfirst\n\nsecond\n";
+        let buffer = html_of(MarkdownRenderer.render_buffer(&path, text));
+        assert!(buffer.contains("data-sourcepos=\"1:1-1:7\""), "{buffer}");
+        assert!(buffer.contains("data-sourcepos=\"5:1-5:6\""), "{buffer}");
+        fs::write(&path, text).unwrap();
+        let saved = match MarkdownRenderer.render(&path).unwrap() {
+            Output::Html(h) => h,
+            Output::Pdf(_) => panic!("HTML を期待"),
+        };
+        assert!(!saved.contains("data-sourcepos"), "読むモードの出力は変えない: {saved}");
+    }
+
+    #[test]
+    fn a_buffer_renders_the_same_as_the_saved_file_apart_from_source_positions() {
+        let dir = project("same");
+        let path = dir.join("doc.md");
+        let text = "# Hi\n\n$x^2$ and `code`\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+        fs::write(&path, text).unwrap();
+        let strip = |h: String| {
+            let mut out = String::new();
+            let mut rest = h.as_str();
+            while let Some(i) = rest.find(" data-sourcepos=\"") {
+                out.push_str(&rest[..i]);
+                let after = &rest[i + " data-sourcepos=\"".len()..];
+                rest = &after[after.find('"').unwrap() + 1..];
+            }
+            out.push_str(rest);
+            out
+        };
+        let buffer = strip(html_of(MarkdownRenderer.render_buffer(&path, text)));
+        let saved = match MarkdownRenderer.render(&path).unwrap() {
+            Output::Html(h) => h,
+            Output::Pdf(_) => panic!("HTML を期待"),
+        };
+        assert_eq!(buffer, saved);
+    }
+
+    #[test]
+    fn buffer_dependency_dirs_follow_the_unsaved_text() {
+        let dir = project("deps");
+        let path = dir.join("doc.md");
+        assert_eq!(MarkdownRenderer.buffer_dependency_dirs(&path, "![x](assets/a.svg)"), vec![dir.join("assets")]);
+        assert!(MarkdownRenderer.buffer_dependency_dirs(&path, "no images").is_empty());
+    }
+}

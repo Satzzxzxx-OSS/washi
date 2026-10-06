@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use super::{markdown, Output, Renderer};
+use super::{markdown, Output, Rendered, Renderer};
 
 pub struct MermaidRenderer;
 
@@ -20,6 +20,10 @@ impl Renderer for MermaidRenderer {
 
     fn render_text(&self, source: &str) -> Result<Output, String> {
         markdown::render_source(&fence(source), None)
+    }
+
+    fn render_buffer(&self, path: &Path, text: &str) -> Rendered {
+        Rendered { output: markdown::render_source(&fence(text), path.parent()), diagnostics: Vec::new() }
     }
 }
 
@@ -44,5 +48,15 @@ mod tests {
             }
             Output::Pdf(_) => panic!("HTML を期待"),
         }
+    }
+
+    #[test]
+    fn a_buffer_is_wrapped_in_a_mermaid_block_too() {
+        let rendered = MermaidRenderer.render_buffer(Path::new("/tmp/washi-none/a.mmd"), "graph LR; A-->B");
+        match rendered.output.unwrap() {
+            Output::Html(html) => assert!(html.contains("language-mermaid") && html.contains("A--&gt;B"), "{html}"),
+            Output::Pdf(_) => panic!("HTML を期待"),
+        }
+        assert!(rendered.diagnostics.is_empty());
     }
 }

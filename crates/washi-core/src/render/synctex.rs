@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fs::File, io::Read, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    io::Read,
+    path::Path,
+};
 
 use flate2::read::GzDecoder;
 
@@ -44,6 +49,14 @@ pub struct SyncTex {
 pub struct Hit {
     pub input: String,
     pub line: u32,
+}
+
+/// ソースの行に対応する、プレビュー上の位置（PDF のポイント、ページは 1 始まり、y は行の上端）
+#[derive(Debug, PartialEq)]
+pub struct ForwardHit {
+    pub page: u32,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl SyncTex {
@@ -100,6 +113,27 @@ impl SyncTex {
             }
         }
         synctex
+    }
+
+    /// `matches` が真を返す入力ファイルの `line` 行に対応する位置（前方検索）。
+    /// 同じ行が無ければ、いちばん近い行を使う。同じ距離なら、先のページ・上の位置を選ぶ
+    pub fn forward(&self, matches: impl Fn(&str) -> bool, line: u32) -> Option<ForwardHit> {
+        let tags: HashSet<u32> = self
+            .inputs
+            .iter()
+            .filter(|(_, name)| !name.is_empty() && matches(name))
+            .map(|(tag, _)| *tag)
+            .collect();
+        self.pages
+            .iter()
+            .flat_map(|(page, records)| records.iter().map(move |r| (*page, r)))
+            .filter(|(_, r)| r.line > 0 && tags.contains(&r.tag) && (r.is_leaf() || r.is_hbox()))
+            .min_by_key(|(page, r)| (r.line.abs_diff(line), *page, r.y - r.h.max(0), r.x))
+            .map(|(page, r)| ForwardHit {
+                page,
+                x: r.x as f64 / SP_PER_BP,
+                y: (r.y - r.h.max(0)) as f64 / SP_PER_BP,
+            })
     }
 
     pub fn inverse(&self, page: u32, x_bp: f64, y_bp: f64) -> Option<Hit> {
@@ -209,5 +243,34 @@ mod tests {
         let s = SyncTex::parse(&text);
         let hit = s.inverse(1, bp(25_000_000), bp(8_000_000));
         assert!(hit.is_none());
+    }
+
+    fn is_a_tex(name: &str) -> bool {
+        name == "/doc/a.tex"
+    }
+
+    #[test]
+    fn forward_finds_the_page_and_the_top_of_the_line() {
+        let s = SyncTex::parse(SAMPLE);
+        let hit = s.forward(is_a_tex, 10).unwrap();
+        assert_eq!(hit.page, 1);
+        // 行の箱（hbox）の左上。行の中の文字の位置ではなく、行そのものを指す
+        assert!((hit.x - bp(4_736_287)).abs() < 1e-6, "{hit:?}");
+        assert!((hit.y - bp(8_000_000 - 800_000)).abs() < 1e-6, "{hit:?}");
+        assert_eq!(s.forward(is_a_tex, 40).unwrap().page, 2);
+    }
+
+    #[test]
+    fn forward_uses_the_nearest_line_when_the_exact_one_has_no_box() {
+        let s = SyncTex::parse(SAMPLE);
+        assert_eq!(s.forward(is_a_tex, 11).unwrap().page, 1);
+        assert_eq!(s.forward(is_a_tex, 100).unwrap().page, 2);
+        assert_eq!(s.forward(is_a_tex, 1).unwrap().page, 1);
+    }
+
+    #[test]
+    fn forward_ignores_other_input_files() {
+        let s = SyncTex::parse(SAMPLE);
+        assert!(s.forward(|name| name == "/doc/other.tex", 10).is_none());
     }
 }
