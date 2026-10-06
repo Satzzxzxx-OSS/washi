@@ -13,10 +13,11 @@
     <meta property="og:title" content="Washi (和紙)" />
     <meta property="og:description" content="Read Markdown, Typst and LaTeX quietly, re-rendered on every save." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="../assets/shot-markdown-light.jpg" />
-    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
-    <link rel="alternate" hreflang="ja" href="../" />
+    <meta property="og:image" content="assets/shot-markdown-light.jpg" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang="ja" href="ja/" />
     <link rel="alternate" hreflang="en" href="./" />
+    <link rel="alternate" hreflang="x-default" href="./" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -219,6 +220,55 @@
       }
       @media (max-width: 760px) {
         .nav nav a:not(.keep) {
+          display: none;
+        }
+      }
+
+      /* small screens: keep the header on one line, keep table row labels visible while scrolling */
+      .hero h1 .word {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: var(--paper-2);
+        box-shadow: 1px 0 0 var(--rule);
+      }
+      @media (max-width: 760px) {
+        .nav .wrap {
+          gap: 0.75rem;
+        }
+        .nav nav {
+          gap: 0.9rem;
+          font-size: 0.86rem;
+          white-space: nowrap;
+        }
+        .nav nav a {
+          white-space: nowrap;
+        }
+        th:first-child {
+          width: auto;
+          min-width: 8.5rem;
+        }
+      }
+      @media (max-width: 560px) {
+        .nav .nav-install {
+          display: none;
+        }
+        .nav .btn {
+          padding: 0.45rem 0.85rem !important;
+          font-size: 0.82rem !important;
+        }
+      }
+      @media (max-width: 560px) {
+        .hero h1 {
+          font-size: clamp(2rem, 9.2vw, 2.6rem);
+        }
+      }
+      @media (max-width: 400px) {
+        .brand small {
           display: none;
         }
       }
@@ -707,7 +757,7 @@
     <header class="nav" id="nav">
       <div class="wrap">
         <a class="brand" href="#top" aria-label="Washi">
-          <img src="../favicon.svg" alt="" width="28" height="28" />
+          <img src="favicon.svg" alt="" width="28" height="28" />
           Washi <small>和紙</small>
         </a>
         <nav aria-label="Main">
@@ -715,8 +765,8 @@
           <a href="#shots">Screens</a>
           <a href="#how">How it works</a>
           <a href="#compare">Compare</a>
-          <a class="keep" href="#install">Install</a>
-          <a class="keep" href="../" hreflang="ja" lang="ja">日本語</a>
+          <a class="keep nav-install" href="#install">Install</a>
+          <a class="keep" href="ja/" hreflang="ja" lang="ja">日本語</a>
         </nav>
         <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme" title="Toggle theme">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -749,7 +799,7 @@
           <div class="stage">
             <div class="window" id="window">
               <div class="bar"><i></i><i></i><i></i><span>showcase.md — Washi</span></div>
-              <img src="../assets/shot-markdown-light.jpg" width="1221" height="641" alt="Washi showing Markdown math and code, with the outline panel on the left" />
+              <img src="assets/shot-markdown-light.jpg" width="1221" height="641" alt="Washi showing Markdown math and code, with the outline panel on the left" />
             </div>
           </div>
         </div>
@@ -840,19 +890,19 @@
           </div>
           <div class="shots">
             <figure class="shot on" id="s1" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md</span></div><img loading="lazy" src="../assets/shot-markdown-light.jpg" width="1221" height="641" alt="Markdown math and code" /></div>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md</span></div><img loading="lazy" src="assets/shot-markdown-light.jpg" width="1221" height="641" alt="Markdown math and code" /></div>
               <figcaption>KaTeX math and highlighted code. On the left, an outline panel that tracks your position.</figcaption>
             </figure>
             <figure class="shot" id="s2" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — dark</span></div><img loading="lazy" src="../assets/shot-markdown-dark.jpg" width="1221" height="641" alt="A Mermaid diagram in the dark theme" /></div>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — dark</span></div><img loading="lazy" src="assets/shot-markdown-dark.jpg" width="1221" height="641" alt="A Mermaid diagram in the dark theme" /></div>
               <figcaption>Mermaid colors switch with the dark theme. Click a diagram to enlarge it.</figcaption>
             </figure>
             <figure class="shot" id="s3" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>report.typ</span></div><img loading="lazy" src="../assets/shot-typst.jpg" width="1221" height="641" alt="A Typst report shown as a PDF" /></div>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>report.typ</span></div><img loading="lazy" src="assets/shot-typst.jpg" width="1221" height="641" alt="A Typst report shown as a PDF" /></div>
               <figcaption>Typst is compiled straight to PDF by the compiler built into the app. Bookmarks become the outline panel.</figcaption>
             </figure>
             <figure class="shot" id="s4" style="margin: 0">
-              <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="../assets/shot-latex.jpg" width="1221" height="641" alt="A LaTeX paper shown as a PDF" /></div>
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="assets/shot-latex.jpg" width="1221" height="641" alt="A LaTeX paper shown as a PDF" /></div>
               <figcaption>LaTeX is compiled with latexmk, or tectonic if that is missing. Errors are shown with line numbers.</figcaption>
             </figure>
           </div>
@@ -1071,13 +1121,38 @@
             [...node.childNodes].forEach((n) => {
               if (n.nodeType === 3) {
                 const frag = document.createDocumentFragment();
-                [...n.textContent].forEach((c) => {
-                  const s = document.createElement("span");
-                  s.className = "ch";
-                  s.setAttribute("aria-hidden", "true");
-                  s.textContent = c;
-                  frag.append(s);
-                });
+                const closers = "、。，．）」』】！？";
+                const chars = (text, into) =>
+                  [...text].forEach((c) => {
+                    const s = document.createElement("span");
+                    s.className = "ch";
+                    s.setAttribute("aria-hidden", "true");
+                    s.textContent = c;
+                    into.append(s);
+                  });
+                if (/\s/.test(n.textContent)) {
+                  // Text with spaces (e.g. English): wrap each word so it never breaks mid-word, and keep the real spaces.
+                  n.textContent.split(/(\s+)/).forEach((token) => {
+                    if (!token) return;
+                    if (/^\s+$/.test(token)) return frag.append(document.createTextNode(" "));
+                    const word = document.createElement("span");
+                    word.className = "word";
+                    chars(token, word);
+                    frag.append(word);
+                  });
+                } else {
+                  // Text without spaces (e.g. Japanese): break only after a clause that ends in punctuation.
+                  let clause = null;
+                  [...n.textContent].forEach((c) => {
+                    if (!clause) {
+                      clause = document.createElement("span");
+                      clause.className = "word";
+                      frag.append(clause);
+                    }
+                    chars(c, clause);
+                    if (closers.includes(c)) clause = null;
+                  });
+                }
                 n.replaceWith(frag);
               } else walk(n);
             });

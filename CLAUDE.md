@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 概要
 
-Washi（和紙）は Markdown / Typst / LaTeX / Mermaid / PDF を読むための閲覧専用ビューア（Tauri 2 + Rust + TypeScript、フレームワークなしの素の TS）。編集機能は意図的に持たない。ファイルの保存を監視し、スクロール位置とズームを保ったまま再描画する。UI の文言は日本語。README は英語のみで、短く保つ（比較表は要点だけ）。ランディングは日英の 2 ページ（`docs/index.html` が日本語、`docs/en/index.html` が英語）で、内容を変えるときは両方を揃える。
+Washi（和紙）は Markdown / Typst / LaTeX / Mermaid / PDF を読むための閲覧専用ビューア（Tauri 2 + Rust + TypeScript、フレームワークなしの素の TS）。編集機能は意図的に持たない。ファイルの保存を監視し、スクロール位置とズームを保ったまま再描画する。UI の文言は日本語。README は英語のみで、短く保つ（比較表は要点だけ）。ランディングは日英の 2 ページ（`docs/index.html` が英語で既定、`docs/ja/index.html` が日本語。GitHub Pages の公開元は `/docs`）で、内容を変えるときは両方を揃える。
 
 ## コマンド
 
@@ -31,6 +31,7 @@ Lint / formatter の設定はない。
 cargo test -p washi-core dump -- --ignored   # e2e/fixtures を生成
 pnpm dev
 # http://localhost:1420/e2e/harness.html?file=/x/examples/showcase.md&outline=1&theme=dark
+# 見出しまでスクロール: &scroll=4.%20Math（見出しの先頭の文字）、待ち時間: &settle=5000（ミリ秒）
 ```
 
 ## アーキテクチャ
@@ -67,5 +68,5 @@ pnpm dev
 - アイコンは `python3 scripts/make_logo.py --all` で `app-icon.svg`・`docs/assets/logo.svg`（README 用）・`docs/favicon.svg` を作り、`pnpm tauri icon app-icon.svg --output <一時フォルダ>` で作った PNG/ICNS/ICO のうち、`src-tauri/icons/` に既にある名前のものだけを入れ替える（iOS・Android 用は使わない）。
 - Finder への登録拡張子は `src-tauri/tauri.conf.json` の `bundle.fileAssociations`。形式を足したら、ここにも足す（`src-tauri/src/lib.rs` のテストが、`supported_extensions()` との不一致を検出する）。
 - Tauri の権限は `src-tauri/capabilities/` と `tauri.conf.json` で管理。新しいプラグイン API を使うときは capability の追加が必要。
-- `examples/` は各形式の実文書に近いサンプルで、`dump` テストの入力にもなる。
+- `examples/` は各形式の実文書に近いサンプル（英語。ランディングのスクリーンショット `docs/assets/shot-*.jpg` の元で、ハーネスを 1221×641 で撮ったもの。PDF の描画を待てるよう、ヘッドレス Chrome を `puppeteer-core` で操作して撮った）で、`dump` テストの入力にもなる。
 - CLI は macOS / Linux 向け（Windows 未対応）。署名・公証は未対応。

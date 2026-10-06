@@ -5,7 +5,7 @@
 A lightweight viewer for reading Markdown, Typst, LaTeX, Mermaid and PDF quietly, re-rendering every time you save.
 Leave the editing to your favorite editor or AI agent; Washi only reads.
 
-Landing pages: [日本語](docs/index.html) · [English](docs/en/index.html)
+Website: [English](https://kiwamizamurai.github.io/washi/) · [日本語](https://kiwamizamurai.github.io/washi/ja/)
 
 ## Install
 
