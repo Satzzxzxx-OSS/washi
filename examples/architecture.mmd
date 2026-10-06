@@ -1,0 +1,32 @@
+classDiagram
+  direction LR
+  class Renderer {
+    <<trait>>
+    +extensions() str[]
+    +render(path) Output
+    +render_text(source) Output
+  }
+  class Output {
+    <<enum>>
+    Html(String)
+    Pdf(Vec~u8~)
+  }
+  class MarkdownRenderer
+  class MermaidRenderer
+  class TypstRenderer
+  class PdfRenderer
+  class TexRenderer~E~
+  class TexEngine {
+    <<trait>>
+    +compile(source, out_dir)
+  }
+  class SystemTexEngine
+  Renderer <|.. MarkdownRenderer
+  Renderer <|.. MermaidRenderer
+  Renderer <|.. TypstRenderer
+  Renderer <|.. PdfRenderer
+  Renderer <|.. TexRenderer
+  Renderer ..> Output : produces
+  TexRenderer o-- TexEngine
+  TexEngine <|.. SystemTexEngine
+  MermaidRenderer ..> MarkdownRenderer : fenced block

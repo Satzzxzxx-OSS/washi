@@ -1,0 +1,92 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\title{Incremental Rendering of Typeset Documents}
+\author{kiwamizamurai}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We describe a viewer that re-renders Markdown, Typst, and \LaTeX{} documents on every save while preserving the reading position. The design isolates format-specific renderers behind a single interface, so adding a format requires one new implementation and one registration.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}
+Authors of long documents alternate between editing and reading~\cite{knuth1984}. Systems such as Typst~\cite{madje2023} compile fast enough to make a \emph{save-and-see} loop practical; a viewer need only observe the file system and display the newest output.
+
+\section{Model}
+\begin{definition}
+A \emph{renderer} is a function $R : \Sigma^{*} \to \mathcal{O}$ from source text to an output $\mathcal{O} = \mathrm{HTML} \sqcup \mathrm{PDF}$.
+\end{definition}
+
+\begin{theorem}[Stale results are discarded]\label{thm:stale}
+Let renders $r_1, r_2, \ldots$ start at times $t_1 < t_2 < \cdots$. If each carries a monotonically increasing token $k_i$ and only the render with the largest token may update the view, then the displayed output is always $R(s_n)$ for the latest source $s_n$.
+\end{theorem}
+\begin{proof}
+Suppose a render $r_i$ with $i < n$ finishes last. Its token $k_i < k_n$ fails the check, so it is dropped. Hence only $r_n$ can write. \qedhere
+\end{proof}
+
+\begin{lemma}\label{lem:sum}
+For all $n \ge 1$, $\displaystyle\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$.
+\end{lemma}
+
+Combining Theorem~\ref{thm:stale} and Lemma~\ref{lem:sum} is not meaningful, but it exercises cross-references.
+
+\section{Evaluation}
+Table~\ref{tab:latency} lists median latencies on an Apple silicon laptop.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llr@{}}
+\toprule
+Format   & Pipeline            & Latency (ms) \\
+\midrule
+Markdown & comrak $\to$ HTML   & 2   \\
+Typst    & typst $\to$ PDF     & 48  \\
+\LaTeX{} & tectonic $\to$ PDF  & 950 \\
+\bottomrule
+\end{tabular}
+\caption{Median render latency per format.}
+\label{tab:latency}
+\end{table}
+
+\begin{align}
+  \mathrm{speedup} &= \frac{T_{\text{full}}}{T_{\text{incremental}}} \label{eq:speedup} \\
+  &\approx \frac{950}{48} \approx 19.8 \notag
+\end{align}
+
+Equation~\eqref{eq:speedup} gives the ratio of a full \LaTeX{} run to an incremental Typst run.
+
+\subsection{Design goals}
+\begin{enumerate}[label=(\roman*)]
+  \item Keep the scroll position across re-renders.
+  \item Surface compiler diagnostics with line and column.
+  \item Never execute raw HTML from documents.
+\end{enumerate}
+
+\begin{itemize}[nosep]
+  \item Formats are added by implementing one trait.
+  \item External engines are injected for testing.
+\end{itemize}
+
+\section{Conclusion}
+A small, well-factored viewer is sufficient for a fast save-and-see loop.
+
+\begin{thebibliography}{9}
+\bibitem{knuth1984} D.~E. Knuth, \emph{The \TeX{}book}, Addison-Wesley, 1984.
+\bibitem{madje2023} L.~M\"adje and M.~Haug, \emph{Typst: A new markup-based typesetting system}, 2023.
+\end{thebibliography}
+
+\end{document}

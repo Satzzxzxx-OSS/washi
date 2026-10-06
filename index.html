@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Washi</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <aside id="outline" aria-label="目次" hidden><nav></nav></aside>
+    <div id="scroller">
+      <section id="empty">
+        <h1>和紙 <span>Washi</span></h1>
+        <p>Markdown・Typst・LaTeX・Mermaid・PDF をここにドロップ</p>
+        <p>またはコピーして <kbd>⌘V</kbd> で貼り付け</p>
+        <button id="open" type="button">ファイルを開く <kbd>⌘O</kbd></button>
+      </section>
+      <article id="markdown" class="markdown" dir="auto" hidden></article>
+      <div id="pdf" hidden></div>
+    </div>
+    <form id="find" hidden>
+      <input type="search" placeholder="検索" aria-label="検索" />
+      <button type="button" data-find="prev" aria-label="前へ">↑</button>
+      <button type="button" data-find="next" aria-label="次へ">↓</button>
+      <button type="button" data-find="close" aria-label="閉じる">×</button>
+    </form>
+    <div id="toast" role="status" hidden></div>
+    <pre id="error" hidden></pre>
+  </body>
+</html>
