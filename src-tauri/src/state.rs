@@ -1,4 +1,7 @@
-use std::{collections::HashMap, sync::Mutex};
+use std::{
+    collections::{BTreeSet, HashMap},
+    sync::Mutex,
+};
 
 #[derive(Default)]
 pub struct PendingFiles(Mutex<HashMap<String, String>>);
@@ -14,6 +17,25 @@ impl PendingFiles {
 
     pub fn has(&self, label: &str) -> bool {
         self.0.lock().unwrap().contains_key(label)
+    }
+}
+
+/// 未保存の変更があるウィンドウ。⌘Q で、確認を出す相手を知るために使う
+#[derive(Default)]
+pub struct DirtyWindows(Mutex<BTreeSet<String>>);
+
+impl DirtyWindows {
+    pub fn set(&self, label: &str, dirty: bool) {
+        let mut labels = self.0.lock().unwrap();
+        if dirty {
+            labels.insert(label.to_owned());
+        } else {
+            labels.remove(label);
+        }
+    }
+
+    pub fn labels(&self) -> Vec<String> {
+        self.0.lock().unwrap().iter().cloned().collect()
     }
 }
 
@@ -60,6 +82,18 @@ impl Documents {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dirty_windows_are_tracked_per_label() {
+        let dirty = DirtyWindows::default();
+        assert!(dirty.labels().is_empty());
+        dirty.set("a", true);
+        dirty.set("b", true);
+        dirty.set("a", true);
+        assert_eq!(dirty.labels(), vec!["a", "b"]);
+        dirty.set("a", false);
+        assert_eq!(dirty.labels(), vec!["b"]);
+    }
 
     #[test]
     fn pending_is_per_window_and_taken_once() {

@@ -11,6 +11,12 @@ export interface Controls {
   setTheme(theme: Theme): unknown;
   setWidth(width: Width): unknown;
   zoom(direction: ZoomDirection): unknown;
+  save(): unknown;
+  toggleEdit(): unknown;
+  undo(): unknown;
+  redo(): unknown;
+  toggleAutosave(): unknown;
+  toggleSyncCursor(): unknown;
 }
 
 export function menuActions(c: Controls): Record<string, () => unknown> {
@@ -30,5 +36,11 @@ export function menuActions(c: Controls): Record<string, () => unknown> {
     "zoom-in": () => c.zoom("in"),
     "zoom-out": () => c.zoom("out"),
     "zoom-reset": () => c.zoom("reset"),
+    save: () => c.save(),
+    edit: () => c.toggleEdit(),
+    undo: () => c.undo(),
+    redo: () => c.redo(),
+    autosave: () => c.toggleAutosave(),
+    "sync-cursor": () => c.toggleSyncCursor(),
   };
 }

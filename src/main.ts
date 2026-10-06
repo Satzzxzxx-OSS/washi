@@ -11,11 +11,14 @@ import {
   jumpToSource,
   print,
   render,
+  renderBuffer,
   renderText,
+  setDirty,
   supportedExtensions,
   watch,
 } from "./api";
 import { interpretPaste } from "./clipboard";
+import { EditingController } from "./editor/controller";
 import { FindBar } from "./find";
 import { hasJumpableSource, pageClick } from "./jump";
 import { OutlinePanel } from "./outline";
@@ -31,6 +34,7 @@ import { PdfView } from "./views/pdf";
 const CHANGED_EVENT = "washi://changed";
 const OPEN_EVENT = "washi://open";
 const MENU_EVENT = "washi://menu";
+const QUIT_EVENT = "washi://quit-requested";
 const RELOAD_DELAY_MS = 150;
 const WHEEL_ZOOM_INTERVAL_MS = 90;
 
@@ -46,6 +50,7 @@ function debounce(fn: () => void, ms: number) {
 
 const host: Host = {
   render,
+  renderBuffer,
   renderText,
   async opened(path) {
     await getCurrentWindow().setTitle(`${basename(path)} — Washi`);
@@ -78,6 +83,32 @@ async function main() {
   const finder = new FindBar(byId("find") as HTMLFormElement);
   const toast = createToast(byId("toast"));
 
+  const editing = new EditingController({
+    viewer,
+    scroll,
+    elements: {
+      pane: byId("editor-pane"),
+      editor: byId("editor"),
+      banner: byId("banner"),
+      status: byId("editor-status"),
+      resizer: byId("resizer"),
+      confirm: byId("confirm") as HTMLDialogElement,
+      scroller: byId("scroller"),
+      markdown: byId("markdown"),
+      pdf: byId("pdf"),
+    },
+    prefs: () => prefs,
+    update: (patch) => update(patch),
+    toast,
+    setTitle: (title) => getCurrentWindow().setTitle(title),
+    setDirty,
+  });
+
+  /** 別のファイルを開く。編集中なら、先に保存・破棄を確認する（キャンセルなら開かない） */
+  const open_ = async (path: string) => {
+    if (await editing.release()) await viewer.load(path);
+  };
+
   const reloadSoon = debounce(() => void viewer.reload(), RELOAD_DELAY_MS);
   const relayoutSoon = debounce(() => void viewer.relayout(), RELOAD_DELAY_MS);
 
@@ -92,18 +123,20 @@ async function main() {
       multiple: false,
       filters: [{ name: "ドキュメント", extensions }],
     });
-    if (typeof selected === "string") await viewer.load(selected);
+    if (typeof selected === "string") await open_(selected);
   };
 
   const paste = async () => {
     const text = await readText().catch(() => "");
     const field = document.activeElement;
+    if (editing.paste(text)) return;
     if (field instanceof HTMLInputElement) {
       const end = field.value.length;
       field.setRangeText(text, field.selectionStart ?? end, field.selectionEnd ?? end, "end");
       return;
     }
     const pasted = interpretPaste(text, isSupported);
+    if (pasted && !(await editing.release())) return;
     if (pasted?.kind === "file") await viewer.load(pasted.path);
     else if (pasted) await viewer.showText(pasted.text);
   };
@@ -112,7 +145,7 @@ async function main() {
     open: pick,
     reload: () => viewer.reload(),
     print,
-    find: () => finder.open(),
+    find: () => editing.find() || finder.open(),
     paste,
     toggleOutline: () => {
       update({ outline: !prefs.outline });
@@ -125,11 +158,17 @@ async function main() {
     },
     setWidth: (width) => update({ width }),
     zoom: (direction) => viewer.zoom(direction),
+    save: () => editing.save(),
+    toggleEdit: () => editing.toggle(),
+    undo: () => editing.undo(),
+    redo: () => editing.redo(),
+    toggleAutosave: () => editing.toggleAutosave(),
+    toggleSyncCursor: () => editing.toggleSyncCursor(),
   });
 
   const openPending = async () => {
     const path = await initialFile();
-    if (path) await viewer.load(path);
+    if (path) await open_(path);
   };
 
   byId("open").addEventListener("click", () => void pick());
@@ -156,6 +195,8 @@ async function main() {
     const click = pageClick(wrapper, e.clientX, e.clientY);
     if (!click) return;
     e.preventDefault();
+    // 編集中で、開いているファイルのソースなら、エディタのカーソルを動かす
+    if (editing.active && (await editing.revealSource(click.page, click.x, click.y))) return;
     try {
       const where = await jumpToSource(path, click.page, click.x, click.y);
       toast(where ? `${where} を開きました` : "この位置に対応するソースは見つかりませんでした");
@@ -174,16 +215,29 @@ async function main() {
     }
     const base = viewer.currentPath;
     const target = base && resolveLink(base, href);
-    if (target && isSupported(target)) void viewer.load(target);
+    if (target && isSupported(target)) void open_(target);
   });
 
   await listen<string>(MENU_EVENT, (e) => void actions[e.payload]?.());
-  await listen(CHANGED_EVENT, reloadSoon);
+  await listen(CHANGED_EVENT, async () => {
+    if (!(await editing.diskChanged())) reloadSoon();
+  });
+
+  // 未保存の変更があるウィンドウを閉じる／終了するときは、確認する
+  const confirmThenDestroy = async () => {
+    if (await editing.confirmDiscardOrSave()) await getCurrentWindow().destroy();
+  };
+  await getCurrentWindow().onCloseRequested(async (e) => {
+    if (!editing.dirty) return;
+    e.preventDefault();
+    await confirmThenDestroy();
+  });
+  await listen(QUIT_EVENT, () => void confirmThenDestroy());
   await listen(OPEN_EVENT, () => void openPending());
   await getCurrentWebview().onDragDropEvent((e) => {
     if (e.payload.type !== "drop") return;
     const dropped = e.payload.paths.find(isSupported);
-    if (dropped) void viewer.load(dropped);
+    if (dropped) void open_(dropped);
   });
 
   await openPending();

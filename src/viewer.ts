@@ -1,10 +1,11 @@
-import type { Output } from "./api";
+import type { BufferResult, Diagnostic, Output } from "./api";
 import type { OutlineSink } from "./outline";
 import type { Scroll } from "./scroll";
 import type { RenderContext, View, ZoomDirection } from "./views/view";
 
 export interface Host {
   render(path: string): Promise<Output>;
+  renderBuffer(path: string, text: string): Promise<BufferResult>;
   renderText(text: string): Promise<Output>;
   opened(path: string): Promise<void>;
   pasted(): Promise<void>;
@@ -15,12 +16,22 @@ export interface Chrome {
   error: HTMLElement;
 }
 
-type Source = { file: string } | { text: string };
+/** 編集中の本文を描画するときの通知先。失敗しても、直前の良いプレビューは残る */
+export interface BufferHooks {
+  diagnostics(list: Diagnostic[]): void;
+  /** 描画に失敗したときのメッセージ。成功したら `null` */
+  failed(message: string | null): void;
+}
+
+const NO_HOOKS: BufferHooks = { diagnostics: () => {}, failed: () => {} };
+
+type Source = { file: string } | { text: string } | { buffer: { path: string; text: string } };
 
 export class Viewer {
   private source: Source | null = null;
   private active: View | null = null;
   private token = 0;
+  private hooks: BufferHooks = NO_HOOKS;
 
   constructor(
     private readonly host: Host,
@@ -31,7 +42,28 @@ export class Viewer {
   ) {}
 
   get currentPath() {
-    return this.source && "file" in this.source ? this.source.file : null;
+    if (!this.source) return null;
+    if ("file" in this.source) return this.source.file;
+    return "buffer" in this.source ? this.source.buffer.path : null;
+  }
+
+  setBufferHooks(hooks: BufferHooks | null) {
+    this.hooks = hooks ?? NO_HOOKS;
+  }
+
+  /** 編集中の本文を描画する。ズームや目次はそのまま（`load` と違って、開き直さない） */
+  async renderBuffer(path: string, text: string) {
+    this.source = { buffer: { path, text } };
+    await this.reload();
+  }
+
+  /** 編集をやめて、ディスク上のファイルの表示に戻る */
+  async leaveBuffer() {
+    if (!this.source || !("buffer" in this.source)) return;
+    this.source = { file: this.source.buffer.path };
+    this.hooks.diagnostics([]);
+    this.hooks.failed(null);
+    await this.reload();
   }
 
   async load(path: string) {
@@ -57,11 +89,25 @@ export class Viewer {
     if (!source) return;
     const mine = ++this.token;
     try {
-      const output =
-        "file" in source
-          ? await this.host.render(source.file)
-          : await this.host.renderText(source.text);
-      if (mine !== this.token) return;
+      let output: Output;
+      if ("buffer" in source) {
+        const result = await this.host.renderBuffer(source.buffer.path, source.buffer.text);
+        if (mine !== this.token) return;
+        this.hooks.diagnostics(result.diagnostics);
+        if (!result.ok) {
+          // 入力の途中は、エラーになるのがふつう。直前の良いプレビューを残して、メッセージだけ知らせる
+          this.hooks.failed(result.message);
+          return;
+        }
+        this.hooks.failed(null);
+        output = result.output;
+      } else {
+        output =
+          "file" in source
+            ? await this.host.render(source.file)
+            : await this.host.renderText(source.text);
+        if (mine !== this.token) return;
+      }
       const view = this.views.find((v) => v.accepts === output.kind);
       if (!view) throw new Error(`表示できない出力です: ${output.kind}`);
 

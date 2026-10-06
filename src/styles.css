@@ -516,3 +516,151 @@ kbd {
     display: none !important;
   }
 }
+
+/* ---- 編集（分割表示） ---- */
+
+#editor-pane {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  background: var(--paper);
+}
+
+#editor {
+  flex: 1;
+  min-height: 0;
+}
+#editor .cm-editor {
+  height: 100%;
+}
+
+#banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--rule);
+  background: var(--code-bg);
+  font-size: 0.85rem;
+}
+#banner span {
+  flex: 1 1 auto;
+}
+#banner[data-kind="error"] span {
+  color: var(--accent);
+}
+
+#editor-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0.75rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font: 0.75rem/1.6 var(--font-mono);
+}
+#editor-status .failure {
+  overflow: hidden;
+  color: var(--accent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#resizer {
+  flex: none;
+  width: 5px;
+  margin-left: -2px;
+  z-index: 2;
+  cursor: col-resize;
+  background: var(--rule);
+  background-clip: content-box;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+}
+#resizer:hover,
+#resizer:focus-visible,
+#resizer:active {
+  background-color: var(--accent);
+  outline: none;
+}
+
+#banner button,
+#confirm button {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+#banner button:hover,
+#confirm button:hover {
+  border-color: var(--accent);
+}
+
+#confirm {
+  max-width: 24rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.3);
+  color: var(--ink);
+}
+#confirm::backdrop {
+  background: rgb(0 0 0 / 0.3);
+}
+#confirm p {
+  margin: 0 0 1rem;
+}
+#confirm .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+#confirm button[value="save"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+
+#pdf .page {
+  position: relative;
+}
+.sync-marker {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.8;
+  pointer-events: none;
+  animation: sync-fade 1.2s ease-out forwards;
+}
+.sync-flash {
+  animation: sync-highlight 1.2s ease-out;
+}
+@keyframes sync-fade {
+  to {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+@keyframes sync-highlight {
+  from {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+}
+
+@media print {
+  #editor-pane,
+  #resizer,
+  #confirm {
+    display: none !important;
+  }
+}

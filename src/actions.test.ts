@@ -15,6 +15,12 @@ function controls() {
     setTheme: log("theme"),
     setWidth: log("width"),
     zoom: log("zoom"),
+    save: log("save"),
+    toggleEdit: log("edit"),
+    undo: log("undo"),
+    redo: log("redo"),
+    toggleAutosave: log("autosave"),
+    toggleSyncCursor: log("sync-cursor"),
   };
   return { calls, actions: menuActions(c) };
 }
@@ -30,8 +36,8 @@ describe("menuActions", () => {
 
   it("maps ids to controls with the right arguments", () => {
     const { calls, actions } = controls();
-    for (const id of ["theme-dark", "width-full", "zoom-out", "outline", "find"]) actions[id]();
-    expect(calls).toEqual(["theme:dark", "width:full", "zoom:out", "outline", "find"]);
+    for (const id of ["theme-dark", "width-full", "zoom-out", "outline", "find", "save", "edit", "undo", "redo"]) actions[id]();
+    expect(calls).toEqual(["theme:dark", "width:full", "zoom:out", "outline", "find", "save", "edit", "undo", "redo"]);
   });
 
   it("ignores unknown ids", () => {

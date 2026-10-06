@@ -16,13 +16,22 @@ describe("prefs", () => {
 
   it("round-trips valid values", () => {
     const store = memory();
-    savePrefs({ theme: "dark", width: "wide", outline: true }, store);
-    expect(loadPrefs(store)).toEqual({ theme: "dark", width: "wide", outline: true });
+    const prefs = { theme: "dark", width: "wide", outline: true, autosave: true, syncCursor: false, editorWidth: 40 } as const;
+    savePrefs(prefs, store);
+    expect(loadPrefs(store)).toEqual(prefs);
   });
 
   it("drops invalid values field by field", () => {
     const store = memory(JSON.stringify({ theme: "neon", width: "full", outline: "yes" }));
     expect(loadPrefs(store)).toEqual({ ...DEFAULT_PREFS, width: "full" });
+  });
+
+  it("clamps the editor width and rejects non-numbers and non-booleans", () => {
+    const wide = memory(JSON.stringify({ editorWidth: 400, autosave: "yes", syncCursor: 1 }));
+    expect(loadPrefs(wide)).toEqual({ ...DEFAULT_PREFS, editorWidth: 75 });
+    expect(loadPrefs(memory(JSON.stringify({ editorWidth: -3 }))).editorWidth).toBe(25);
+    expect(loadPrefs(memory(JSON.stringify({ editorWidth: "50" }))).editorWidth).toBe(50);
+    expect(loadPrefs(memory(JSON.stringify({ editorWidth: null }))).editorWidth).toBe(50);
   });
 
   it("survives corrupt JSON and missing or throwing storage", () => {

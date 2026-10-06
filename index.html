@@ -10,6 +10,12 @@
 
   <body>
     <aside id="outline" aria-label="目次" hidden><nav></nav></aside>
+    <section id="editor-pane" aria-label="エディタ" hidden>
+      <div id="banner" role="alert" hidden></div>
+      <div id="editor"></div>
+      <footer id="editor-status"></footer>
+    </section>
+    <div id="resizer" role="separator" aria-orientation="vertical" aria-label="エディタの幅" tabindex="0" hidden></div>
     <div id="scroller">
       <section id="empty">
         <h1>和紙 <span>Washi</span></h1>
@@ -28,5 +34,15 @@
     </form>
     <div id="toast" role="status" hidden></div>
     <pre id="error" hidden></pre>
+    <dialog id="confirm">
+      <form method="dialog">
+        <p></p>
+        <div class="actions">
+          <button value="cancel">キャンセル</button>
+          <button value="discard">保存しない</button>
+          <button value="save" autofocus>保存</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>

@@ -4,10 +4,12 @@ mod menu;
 mod state;
 mod watch;
 
-use tauri::{Manager, WindowEvent};
+use tauri::{Emitter, Manager, WindowEvent};
 
-use state::{Documents, PendingFiles};
+use state::{DirtyWindows, Documents, PendingFiles};
 use watch::FileWatcher;
+
+const QUIT_EVENT: &str = "washi://quit-requested";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -23,6 +25,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .manage(PendingFiles::default())
         .manage(Documents::default())
+        .manage(DirtyWindows::default())
         .manage(FileWatcher::default())
         .invoke_handler(tauri::generate_handler![
             commands::supported_extensions,
@@ -37,6 +40,7 @@ pub fn run() {
             commands::locate_source,
             commands::read_text,
             commands::write_file,
+            commands::set_dirty,
             commands::watch,
         ])
         .menu(|app| menu::build(app))
@@ -46,6 +50,7 @@ pub fn run() {
                 let label = window.label();
                 window.state::<FileWatcher>().forget(label);
                 window.state::<Documents>().close(label);
+                window.state::<DirtyWindows>().set(label, false);
             }
         })
         .setup(|app| {
@@ -60,6 +65,16 @@ pub fn run() {
         if let tauri::RunEvent::Opened { urls } = &event {
             let paths = urls.iter().filter_map(|u| u.to_file_path().ok());
             launch::open_documents(handle, launch::openable_paths(paths));
+        }
+        // ⌘Q など: 未保存のウィンドウがあれば、終了を止めて、そのウィンドウに確認させる
+        if let tauri::RunEvent::ExitRequested { api, code: None, .. } = &event {
+            let dirty = handle.state::<DirtyWindows>().labels();
+            if !dirty.is_empty() {
+                api.prevent_exit();
+                for label in dirty {
+                    let _ = handle.emit_to(label, QUIT_EVENT, ());
+                }
+            }
         }
         let _ = (handle, event);
     });

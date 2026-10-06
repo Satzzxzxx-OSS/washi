@@ -8,9 +8,24 @@ export interface Prefs {
   theme: Theme;
   width: Width;
   outline: boolean;
+  /** 入力が止まったら自動で保存する（既定はオフ。手動の ⌘S だけ） */
+  autosave: boolean;
+  /** カーソルのある行を、プレビューに表示する */
+  syncCursor: boolean;
+  /** 分割表示で、エディタが占める割合（%） */
+  editorWidth: number;
 }
 
-export const DEFAULT_PREFS: Prefs = { theme: "system", width: "narrow", outline: false };
+export const EDITOR_WIDTH_RANGE = { min: 25, max: 75 } as const;
+
+export const DEFAULT_PREFS: Prefs = {
+  theme: "system",
+  width: "narrow",
+  outline: false,
+  autosave: false,
+  syncCursor: true,
+  editorWidth: 50,
+};
 
 const KEY = "washi:prefs";
 
@@ -27,6 +42,13 @@ function defaultStore(): Store | null {
 const pick = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   allowed.includes(value as T) ? (value as T) : fallback;
 
+const flag = (value: unknown, fallback: boolean) => (typeof value === "boolean" ? value : fallback);
+
+const percent = (value: unknown, fallback: number) =>
+  typeof value === "number" && Number.isFinite(value)
+    ? Math.min(EDITOR_WIDTH_RANGE.max, Math.max(EDITOR_WIDTH_RANGE.min, value))
+    : fallback;
+
 export function loadPrefs(store: Store | null = defaultStore()): Prefs {
   try {
     const raw = store?.getItem(KEY);
@@ -34,7 +56,10 @@ export function loadPrefs(store: Store | null = defaultStore()): Prefs {
     return {
       theme: pick(THEMES, parsed.theme, DEFAULT_PREFS.theme),
       width: pick(WIDTHS, parsed.width, DEFAULT_PREFS.width),
-      outline: typeof parsed.outline === "boolean" ? parsed.outline : DEFAULT_PREFS.outline,
+      outline: flag(parsed.outline, DEFAULT_PREFS.outline),
+      autosave: flag(parsed.autosave, DEFAULT_PREFS.autosave),
+      syncCursor: flag(parsed.syncCursor, DEFAULT_PREFS.syncCursor),
+      editorWidth: percent(parsed.editorWidth, DEFAULT_PREFS.editorWidth),
     };
   } catch {
     return { ...DEFAULT_PREFS };

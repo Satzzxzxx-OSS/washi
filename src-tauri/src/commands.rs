@@ -9,7 +9,7 @@ use washi_core::{
 };
 
 use crate::{
-    state::{Documents, PendingFiles},
+    state::{DirtyWindows, Documents, PendingFiles},
     watch::FileWatcher,
 };
 
@@ -128,6 +128,12 @@ pub async fn write_file(
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// 未保存の変更があるかを、Rust 側にも伝える（⌘Q のときに、確認を出すため）
+#[tauri::command]
+pub fn set_dirty(window: WebviewWindow, dirty_windows: State<DirtyWindows>, dirty: bool) {
+    dirty_windows.set(window.label(), dirty);
 }
 
 #[tauri::command]

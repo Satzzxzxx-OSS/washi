@@ -21,6 +21,12 @@ pub mod id {
     pub const ZOOM_IN: &str = "zoom-in";
     pub const ZOOM_OUT: &str = "zoom-out";
     pub const ZOOM_RESET: &str = "zoom-reset";
+    pub const SAVE: &str = "save";
+    pub const EDIT: &str = "edit";
+    pub const UNDO: &str = "undo";
+    pub const REDO: &str = "redo";
+    pub const AUTOSAVE: &str = "autosave";
+    pub const SYNC_CURSOR: &str = "sync-cursor";
 }
 
 fn item(app: &AppHandle, id: &str, label: &str, accelerator: Option<&str>) -> tauri::Result<MenuItem<Wry>> {
@@ -54,12 +60,19 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .item(&item(app, id::OPEN, "開く…", Some("CmdOrCtrl+O"))?)
         .item(&item(app, id::RELOAD, "再読み込み", Some("CmdOrCtrl+R"))?)
         .separator()
+        .item(&item(app, id::SAVE, "保存", Some("CmdOrCtrl+S"))?)
+        .item(&item(app, id::AUTOSAVE, "自動保存を切り替え", None)?)
+        .separator()
         .item(&item(app, id::PRINT, "印刷…", Some("CmdOrCtrl+P"))?)
         .separator()
         .close_window()
         .build()?;
 
     let edit = SubmenuBuilder::new(app, "編集")
+        .item(&item(app, id::UNDO, "元に戻す", Some("CmdOrCtrl+Z"))?)
+        .item(&item(app, id::REDO, "やり直す", Some("CmdOrCtrl+Shift+Z"))?)
+        .separator()
+        .cut()
         .copy()
         .select_all()
         .separator()
@@ -81,6 +94,9 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .build()?;
 
     let view = SubmenuBuilder::new(app, "表示")
+        .item(&item(app, id::EDIT, "編集（分割表示）", Some("CmdOrCtrl+E"))?)
+        .item(&item(app, id::SYNC_CURSOR, "カーソルの行をプレビューに表示", None)?)
+        .separator()
         .item(&item(app, id::OUTLINE, "目次を表示／隠す", Some("CmdOrCtrl+Shift+O"))?)
         .separator()
         .item(&item(app, id::ZOOM_IN, "拡大", Some("CmdOrCtrl+="))?)
@@ -123,7 +139,8 @@ mod tests {
     fn ids_are_unique() {
         let all = [
             OPEN, RELOAD, PRINT, PASTE, FIND, OUTLINE, THEME_SYSTEM, THEME_LIGHT, THEME_DARK,
-            WIDTH_NARROW, WIDTH_WIDE, WIDTH_FULL, ZOOM_IN, ZOOM_OUT, ZOOM_RESET,
+            WIDTH_NARROW, WIDTH_WIDE, WIDTH_FULL, ZOOM_IN, ZOOM_OUT, ZOOM_RESET, SAVE, EDIT, UNDO, REDO,
+            AUTOSAVE, SYNC_CURSOR,
         ];
         let mut sorted = all.to_vec();
         sorted.sort_unstable();

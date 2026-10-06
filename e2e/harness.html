@@ -15,6 +15,7 @@
           theme: q.get("theme") ?? "system",
           width: q.get("width") ?? "narrow",
           outline: q.get("outline") === "1",
+          autosave: q.get("autosave") === "1",
         }),
       );
       const html = await (await fetch("/index.html")).text();
