@@ -33,6 +33,20 @@ impl Documents {
         self.0.lock().unwrap().contains_key(label)
     }
 
+    /// このウィンドウが開いているファイルが `path` か。保存先として許すのは、これだけ
+    pub fn owns(&self, label: &str, path: &str) -> bool {
+        let registered = self.0.lock().unwrap().get(label).cloned();
+        let Some(registered) = registered else { return false };
+        if registered == path {
+            return true;
+        }
+        // 相対パスやシンボリックリンクの違いは、実体で比べる
+        match (std::fs::canonicalize(&registered), std::fs::canonicalize(path)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
+
     pub fn label_of(&self, path: &str) -> Option<String> {
         self.0
             .lock()
@@ -56,6 +70,24 @@ mod tests {
         assert_eq!(pending.take("main").as_deref(), Some("a.md"));
         assert_eq!(pending.take("main"), None);
         assert_eq!(pending.take("w2").as_deref(), Some("b.md"));
+    }
+
+    #[test]
+    fn a_window_owns_only_the_file_it_has_open() {
+        let dir = std::env::temp_dir().join(format!("washi-owns-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let (a, b) = (dir.join("a.md"), dir.join("b.md"));
+        std::fs::write(&a, "a").unwrap();
+        std::fs::write(&b, "b").unwrap();
+        let docs = Documents::default();
+        docs.open("main", a.to_str().unwrap());
+        assert!(docs.owns("main", a.to_str().unwrap()));
+        assert!(!docs.owns("main", b.to_str().unwrap()), "別のファイルには書かせない");
+        assert!(!docs.owns("other", a.to_str().unwrap()), "開いていないウィンドウには書かせない");
+        assert!(!docs.owns("main", "/etc/hosts"));
+        // 同じファイルを、`.` を含むパスで指しても、同じファイルとして扱う
+        let dotted = format!("{}/./a.md", dir.display());
+        assert!(docs.owns("main", &dotted));
     }
 
     #[test]

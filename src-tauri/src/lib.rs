@@ -31,6 +31,12 @@ pub fn run() {
             commands::print,
             commands::render,
             commands::render_text,
+            commands::render_buffer,
+            commands::autocomplete,
+            commands::forward_locate,
+            commands::locate_source,
+            commands::read_text,
+            commands::write_file,
             commands::watch,
         ])
         .menu(|app| menu::build(app))

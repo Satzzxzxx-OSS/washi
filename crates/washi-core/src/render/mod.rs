@@ -60,6 +60,25 @@ pub struct Rendered {
     pub diagnostics: Vec<Diagnostic>,
 }
 
+impl Rendered {
+    /// 画面に渡す形式: `[tag: u8][診断 JSON の長さ: u32 ビッグエンディアン][診断 JSON][本体]`。
+    /// `tag` は 0=HTML、1=PDF、2=失敗（本体は UTF-8 のメッセージ。画面は直前の良いプレビューを残す）
+    pub fn into_wire(self) -> Vec<u8> {
+        let diagnostics = serde_json::to_vec(&self.diagnostics).unwrap_or_else(|_| b"[]".to_vec());
+        let (tag, body) = match self.output {
+            Ok(Output::Html(html)) => (0u8, html.into_bytes()),
+            Ok(Output::Pdf(bytes)) => (1u8, bytes),
+            Err(message) => (2u8, message.into_bytes()),
+        };
+        let mut wire = Vec::with_capacity(5 + diagnostics.len() + body.len());
+        wire.push(tag);
+        wire.extend_from_slice(&(diagnostics.len() as u32).to_be_bytes());
+        wire.extend_from_slice(&diagnostics);
+        wire.extend_from_slice(&body);
+        wire
+    }
+}
+
 /// プレビュー上の位置（PDF のポイント、ページは 1 始まり）
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize)]
 pub struct PreviewPosition {
@@ -393,5 +412,44 @@ mod e2e_fixtures {
             let output = render(&root.join("examples").join(name)).unwrap_or_else(|e| panic!("{name}: {e}"));
             fs::write(out_dir.join(format!("{name}.wire")), output.into_wire()).unwrap();
         }
+    }
+
+    #[test]
+    fn a_buffer_wire_carries_the_tag_the_diagnostics_and_the_body() {
+        fn split(wire: &[u8]) -> (u8, serde_json::Value, &[u8]) {
+            let len = u32::from_be_bytes(wire[1..5].try_into().unwrap()) as usize;
+            (wire[0], serde_json::from_slice(&wire[5..5 + len]).unwrap(), &wire[5 + len..])
+        }
+        let diagnostic = Diagnostic {
+            file: None,
+            line: 2,
+            column: 3,
+            end_line: 2,
+            end_column: 9,
+            severity: Severity::Error,
+            message: "boom".into(),
+            hints: vec!["try this".into()],
+        };
+        let ok = Rendered { output: Ok(Output::Html("<p>x</p>".into())), diagnostics: vec![] }.into_wire();
+        assert_eq!(split(&ok), (0, serde_json::json!([]), "<p>x</p>".as_bytes()));
+        let pdf = Rendered { output: Ok(Output::Pdf(vec![7, 8])), diagnostics: vec![] }.into_wire();
+        assert_eq!(split(&pdf), (1, serde_json::json!([]), &[7u8, 8][..]));
+        let failed = Rendered { output: Err("失敗".into()), diagnostics: vec![diagnostic] }.into_wire();
+        let (tag, json, body) = split(&failed);
+        assert_eq!((tag, body), (2, "失敗".as_bytes()));
+        assert_eq!(json[0]["line"], 2);
+        assert_eq!(json[0]["severity"], "error");
+        assert_eq!(json[0]["file"], serde_json::Value::Null);
+        assert_eq!(json[0]["hints"][0], "try this");
+    }
+
+    #[test]
+    fn unsupported_formats_have_no_buffer_render_completion_or_forward_search() {
+        let path = Path::new("/tmp/washi-none/a.txt");
+        let rendered = render_buffer(path, "x");
+        assert!(rendered.output.is_err() && rendered.diagnostics.is_empty());
+        assert!(complete(path, "x", 1, false).unwrap().items.is_empty());
+        assert_eq!(locate_forward(path, 1, 1).unwrap(), None);
+        assert!(buffer_dependency_dirs(path, "x").is_empty());
     }
 }
