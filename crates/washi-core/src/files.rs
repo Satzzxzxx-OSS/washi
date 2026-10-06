@@ -42,10 +42,10 @@ pub enum SaveResult {
 pub fn read_text(path: &Path) -> Result<DiskText, String> {
     let meta = fs::metadata(path).map_err(|e| format!("{}: {e}", path.display()))?;
     if meta.len() > MAX_EDITABLE_BYTES {
-        return Err(format!("{}: ファイルが大きすぎて編集できません（{} MB まで）", path.display(), MAX_EDITABLE_BYTES >> 20));
+        return Err(format!("{}: the file is too large to edit (limit {} MB)", path.display(), MAX_EDITABLE_BYTES >> 20));
     }
     let bytes = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let text = String::from_utf8(bytes).map_err(|_| format!("{}: UTF-8 のテキストではありません", path.display()))?;
+    let text = String::from_utf8(bytes).map_err(|_| format!("{}: not UTF-8 text", path.display()))?;
     let hash = hash_text(&text);
     Ok(DiskText { text, hash })
 }

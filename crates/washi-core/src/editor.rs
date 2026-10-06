@@ -57,7 +57,7 @@ pub fn open(location: &SourceLocation) -> Result<(), String> {
         .args(&invocation.args)
         .spawn()
         .map(|_| ())
-        .map_err(|e| format!("エディタ {} を起動できません: {e}", invocation.program))
+        .map_err(|e| format!("cannot start the editor {}: {e}", invocation.program))
 }
 
 #[cfg(test)]

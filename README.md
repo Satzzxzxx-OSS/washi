@@ -3,7 +3,7 @@
 # Washi（和紙）
 
 A lightweight viewer for reading Markdown, Typst, LaTeX, Mermaid and PDF quietly, re-rendering every time you save.
-Leave the editing to your favorite editor or AI agent; Washi only reads.
+It opens as a reader. When you want to change something, press `⌘E` for an editor with a live preview beside it, or keep using your favorite editor or AI agent: Washi redraws either way.
 
 Website: [English](https://kiwamizamurai.github.io/washi/) · [日本語](https://kiwamizamurai.github.io/washi/ja/)
 
@@ -26,18 +26,29 @@ brew upgrade --cask washi     # update
 
 - **Open**: drop a file on the window, `⌘O`, Finder's "Open With", or `washi a.md b.typ` (one window per file).
 - **Paste**: copy text and press `⌘V`; Markdown, Typst, LaTeX or Mermaid is detected from the content.
+- **Edit**: press `⌘E` to split the window, with the source on the left and the preview on the right, updating as you type. `⌘E` again returns to reading. See [Editing](#editing).
 - **Save to refresh**: save the open file, or any file it includes (LaTeX `\input` and `.bib`, Typst `#include`, Markdown images, even in subfolders), and it re-renders in place, keeping your scroll position.
 
 | Action | Shortcut |
 |---|---|
 | Open / Reload / Print | `⌘O` / `⌘R` / `⌘P` |
-| Find | `⌘F` (`Enter` next, `⇧Enter` previous, `Esc` close) |
+| Edit (split view) / Save | `⌘E` / `⌘S` |
+| Find (and replace, while editing) | `⌘F` (`Enter` next, `⇧Enter` previous, `Esc` close) |
 | Toggle the outline | `⇧⌘O` |
 | Zoom in / out / actual size | `⌘+` / `⌘-` / `⌘0` (`⌘` + wheel and pinch also work) |
-| Jump to source | `⌘`-click a Typst / LaTeX PDF |
+| Jump to source | `⌘`-click a Typst / LaTeX PDF (or Markdown, while editing) |
 | Theme, text width | "View" menu |
 
 **Jump to source** opens the matching line in `code`, `cursor`, `zed`, `subl` or `mate` (first one found; otherwise the default text editor). Set `WASHI_EDITOR` to choose, for example `WASHI_EDITOR="code -g {file}:{line}:{column}"`.
+
+## Editing
+
+Washi always opens a file for reading. Press `⌘E` to edit Markdown, Typst, LaTeX or Mermaid (not PDF): the window splits into the source and the live preview. The editor is loaded only then, so reading stays light.
+
+- **Live preview**: the preview renders your unsaved text as you type. Relative images, `#include` and `\input` keep working. LaTeX is slower, so it re-renders about a second after you stop typing, and on save.
+- **Editor**: syntax highlighting, line numbers, undo and redo, search and replace (`⌘F`), and for Typst, completion and error squiggles. When the text does not compile, the last good preview stays on screen and the error shows in the status bar. The status bar also shows saved or unsaved, the character count, and error and warning counts: click one to jump to the next problem. Returning to reading with `⌘E` and back keeps your undo history.
+- **Saving**: `⌘S` saves, and `●` in the title marks unsaved changes. Closing the window or quitting asks first. Autosave (after a second of idle) is off by default; File → "Toggle autosave" switches it on. If the file changes on disk while you have unsaved edits, Washi shows a banner and lets you keep your version or load the disk's. It never overwrites silently.
+- **Source and preview follow each other**: `⌘`-click the preview to move the cursor to that source line, and the preview scrolls to the line your cursor is on (View → "Show the cursor line in the preview" turns this off). Drag the divider to resize the panes.
 
 ## Supported formats
 
@@ -71,16 +82,16 @@ Apps that open Markdown, Typst and LaTeX as files, checked on 2026-10-06 against
 
 | | Washi | [Typeset Viewer](https://github.com/osteele/typeset-viewer) | [Texpile](https://github.com/texpile/texpile) | [Oleafly](https://github.com/Oleafly/Oleafly) | [hibi](https://github.com/schmayterling/hibi) | [Quire Writer](https://github.com/Andesprit/quire-writer) |
 |---|---|---|---|---|---|---|
-| Role | Viewer only | Viewer + notes | Editor | Writing workspace | Note editor | Writing app + AI agent |
+| Role | Viewer, editor on demand | Viewer + notes | Editor | Writing workspace | Note editor | Writing app + AI agent |
 | License | MIT | Closed (free) | AGPL-3.0 | AGPL-3.0 | GPL-3.0 | GPL-3.0 |
 | Re-renders on external save | ○ (also included files) | ○ (also includes, `.bib`) | n/d | n/d | n/d | n/d |
-| Built-in editor | × | × | ○ | ○ | ○ | ○ |
+| Built-in editor | ○ (on demand, `⌘E`) | × | ○ | ○ | ○ | ○ |
 | PDF → source jump | ○ Typst, LaTeX | n/d | n/d | ○ | n/d | ○ Typst |
 | macOS download | 24 MB (zip) | 28 MB (zip) | n/d | 191 MB (dmg) | n/d | 56 MB (dmg) |
 
 Apps for only some of the formats: [TeXlyre](https://github.com/TeXlyre/texlyre) (Typst and LaTeX, web), [Moraya](https://github.com/zouwei/moraya) (Markdown and Typst), [SuperGoodViewer](https://github.com/dotsg/SuperGoodViewer) (Markdown only), [Osh](https://github.com/Hyp4tia/Osh) (Quick Look), [Presto](https://github.com/Presto-io/Presto) (Markdown → Typst → PDF).
 
-To **write**, use Oleafly, Texpile, hibi or Quire Writer. To **read**, use Washi or Typeset Viewer: in what I checked, they are the only viewer-only apps that re-render all three formats on save. Typeset Viewer adds notes, review and presentation mode but is closed source and Apple Silicon only; Washi is MIT, renders Mermaid and has a CLI, and keeps to reading.
+To **write** full-time, use Oleafly, Texpile, hibi or Quire Writer. To **read**, and fix things as you go, use Washi: in what I checked, it and Typeset Viewer are the only apps that re-render all three formats when the file is saved from elsewhere. Typeset Viewer adds notes, review and presentation mode but is closed source, Apple Silicon only and has no editor; Washi is MIT, renders Mermaid, has a CLI and an editor you open only when you want it.
 
 ## Development
 

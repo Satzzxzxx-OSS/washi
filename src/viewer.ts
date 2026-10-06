@@ -109,7 +109,7 @@ export class Viewer {
         if (mine !== this.token) return;
       }
       const view = this.views.find((v) => v.accepts === output.kind);
-      if (!view) throw new Error(`表示できない出力です: ${output.kind}`);
+      if (!view) throw new Error(`Cannot display this output: ${output.kind}`);
 
       const ratio = view === this.active ? this.scroll.ratio() : 0;
       this.activate(view);

@@ -6515,7 +6515,7 @@ dependencies = [
 
 [[package]]
 name = "washi"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "notify",
  "serde",
@@ -6532,7 +6532,7 @@ dependencies = [
 
 [[package]]
 name = "washi-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "base64 0.23.1",
  "comrak",

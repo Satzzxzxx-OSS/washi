@@ -121,7 +121,7 @@ pub async fn write_file(
     force: Option<bool>,
 ) -> Result<SaveResult, String> {
     if !documents.owns(window.label(), &path) {
-        return Err("このウィンドウで開いているファイルにしか保存できません".into());
+        return Err("Can only save the file this window has open".into());
     }
     tauri::async_runtime::spawn_blocking(move || {
         files::write_file(&PathBuf::from(path), &text, base_hash.as_deref(), force.unwrap_or(false))

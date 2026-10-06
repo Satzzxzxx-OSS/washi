@@ -562,6 +562,39 @@ kbd {
   color: var(--muted);
   font: 0.75rem/1.6 var(--font-mono);
 }
+#editor-status {
+  font-variant-numeric: tabular-nums;
+}
+#editor-status .left,
+#editor-status .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+#editor-status .right {
+  overflow: hidden;
+}
+#editor-status .unsaved {
+  color: var(--accent);
+}
+#editor-status button {
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+#editor-status button:hover,
+#editor-status button:focus-visible {
+  background: var(--code-bg);
+  outline: none;
+}
+#editor-status button.error {
+  color: var(--accent);
+}
 #editor-status .failure {
   overflow: hidden;
   color: var(--accent);

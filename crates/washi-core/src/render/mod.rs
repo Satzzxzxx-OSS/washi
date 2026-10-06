@@ -118,7 +118,7 @@ pub trait Renderer: Sync {
     fn render(&self, path: &Path) -> Result<Output, String>;
 
     fn render_text(&self, _source: &str) -> Result<Output, String> {
-        Err("貼り付けに対応していない形式です".into())
+        Err("this format cannot be pasted".into())
     }
 
     fn locate(&self, _path: &Path, _page: usize, _x: f64, _y: f64) -> Result<Option<SourceLocation>, String> {
@@ -187,13 +187,13 @@ pub fn supported_extensions() -> Vec<&'static str> {
 
 pub fn render(path: &Path) -> Result<Output, String> {
     renderer_for(path)
-        .ok_or_else(|| format!("対応していない形式です: {}", path.display()))?
+        .ok_or_else(|| format!("unsupported format: {}", path.display()))?
         .render(path)
 }
 
 pub fn locate(path: &Path, page: usize, x: f64, y: f64) -> Result<Option<SourceLocation>, String> {
     renderer_for(path)
-        .ok_or_else(|| format!("対応していない形式です: {}", path.display()))?
+        .ok_or_else(|| format!("unsupported format: {}", path.display()))?
         .locate(path, page, x, y)
 }
 
@@ -207,7 +207,7 @@ pub fn render_buffer(path: &Path, text: &str) -> Rendered {
     match renderer_for(path) {
         Some(renderer) => renderer.render_buffer(path, text),
         None => Rendered {
-            output: Err(format!("対応していない形式です: {}", path.display())),
+            output: Err(format!("unsupported format: {}", path.display())),
             diagnostics: Vec::new(),
         },
     }
@@ -235,7 +235,7 @@ pub fn complete(path: &Path, text: &str, offset: usize, explicit: bool) -> Resul
 pub fn render_text(text: &str) -> Result<Output, String> {
     let ext = detect::extension_of_text(text);
     renderer_for(Path::new(&format!("pasted.{ext}")))
-        .ok_or("対応する描画器がありません")?
+        .ok_or("no renderer for this format")?
         .render_text(text)
 }
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,28 +9,28 @@
   </head>
 
   <body>
-    <aside id="outline" aria-label="目次" hidden><nav></nav></aside>
-    <section id="editor-pane" aria-label="エディタ" hidden>
+    <aside id="outline" aria-label="Outline" hidden><nav></nav></aside>
+    <section id="editor-pane" aria-label="Editor" hidden>
       <div id="banner" role="alert" hidden></div>
       <div id="editor"></div>
       <footer id="editor-status"></footer>
     </section>
-    <div id="resizer" role="separator" aria-orientation="vertical" aria-label="エディタの幅" tabindex="0" hidden></div>
+    <div id="resizer" role="separator" aria-orientation="vertical" aria-label="Editor width" tabindex="0" hidden></div>
     <div id="scroller">
       <section id="empty">
-        <h1>和紙 <span>Washi</span></h1>
-        <p>Markdown・Typst・LaTeX・Mermaid・PDF をここにドロップ</p>
-        <p>またはコピーして <kbd>⌘V</kbd> で貼り付け</p>
-        <button id="open" type="button">ファイルを開く <kbd>⌘O</kbd></button>
+        <h1>Washi <span>和紙</span></h1>
+        <p>Drop a Markdown, Typst, LaTeX, Mermaid or PDF file here</p>
+        <p>or copy some text and paste it with <kbd>⌘V</kbd></p>
+        <button id="open" type="button">Open a file <kbd>⌘O</kbd></button>
       </section>
       <article id="markdown" class="markdown" dir="auto" hidden></article>
       <div id="pdf" hidden></div>
     </div>
     <form id="find" hidden>
-      <input type="search" placeholder="検索" aria-label="検索" />
-      <button type="button" data-find="prev" aria-label="前へ">↑</button>
-      <button type="button" data-find="next" aria-label="次へ">↓</button>
-      <button type="button" data-find="close" aria-label="閉じる">×</button>
+      <input type="search" placeholder="Find" aria-label="Find" />
+      <button type="button" data-find="prev" aria-label="Previous">↑</button>
+      <button type="button" data-find="next" aria-label="Next">↓</button>
+      <button type="button" data-find="close" aria-label="Close">×</button>
     </form>
     <div id="toast" role="status" hidden></div>
     <pre id="error" hidden></pre>
@@ -38,9 +38,9 @@
       <form method="dialog">
         <p></p>
         <div class="actions">
-          <button value="cancel">キャンセル</button>
-          <button value="discard">保存しない</button>
-          <button value="save" autofocus>保存</button>
+          <button value="cancel">Cancel</button>
+          <button value="discard">Don't save</button>
+          <button value="save" autofocus>Save</button>
         </div>
       </form>
     </dialog>

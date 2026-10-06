@@ -57,7 +57,7 @@ const host: Host = {
     await watch(path);
   },
   async pasted() {
-    await getCurrentWindow().setTitle("貼り付け — Washi");
+    await getCurrentWindow().setTitle("Pasted text — Washi");
   },
 };
 
@@ -121,7 +121,7 @@ async function main() {
   const pick = async () => {
     const selected = await open({
       multiple: false,
-      filters: [{ name: "ドキュメント", extensions }],
+      filters: [{ name: "Documents", extensions }],
     });
     if (typeof selected === "string") await open_(selected);
   };
@@ -199,7 +199,7 @@ async function main() {
     if (editing.active && (await editing.revealSource(click.page, click.x, click.y))) return;
     try {
       const where = await jumpToSource(path, click.page, click.x, click.y);
-      toast(where ? `${where} を開きました` : "この位置に対応するソースは見つかりませんでした");
+      toast(where ? `Opened ${where}` : "No source found for this position");
     } catch (error) {
       toast(String(error), 5000);
     }
@@ -243,4 +243,14 @@ async function main() {
   await openPending();
 }
 
-window.addEventListener("DOMContentLoaded", () => void main());
+window.addEventListener("DOMContentLoaded", () => {
+  // 起動中の例外で、画面が白紙のまま何も分からなくならないように
+  main().catch((e) => {
+    const error = document.getElementById("error");
+    if (error) {
+      error.textContent = `Failed to start: ${String(e)}`;
+      error.hidden = false;
+    }
+    console.error(e);
+  });
+});

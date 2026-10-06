@@ -37,7 +37,7 @@ export function toCmDiagnostics(doc: DocLike, list: readonly Diagnostic[]): CmDi
       const from = position(doc, d.line, d.column);
       let to = position(doc, d.endLine, d.endColumn);
       if (to <= from) to = Math.min(from + 1, doc.length);
-      const hints = d.hints.map((h) => `\nヒント: ${h}`).join("");
+      const hints = d.hints.map((h) => `\nHint: ${h}`).join("");
       return {
         from: Math.min(from, doc.length),
         to: Math.max(to, Math.min(from, doc.length)),

@@ -785,7 +785,7 @@
           <span class="eyebrow">Markdown · Typst · LaTeX viewer</span>
           <h1 id="title" aria-label="保存するたびに、静かに読む。">保存するたびに、<em>静かに</em>読む。</h1>
           <p class="lead">
-            Markdown・Typst・LaTeX・Mermaid・PDF を、ひとつの軽量ビューアで。編集は好きなエディタや AI エージェントに任せて、Washi は保存のたびに、スクロール位置を保ったまま描き直します。
+            Markdown・Typst・LaTeX・Mermaid・PDF を、ひとつの軽量ビューアで。保存のたびに、スクロール位置を保ったまま描き直します。直したくなったら <kbd>⌘E</kbd> で、ライブプレビューを横に置いたエディタが開きます。
           </p>
           <div class="cta">
             <a class="btn primary magnet" href="https://github.com/kiwamizamurai/washi">GitHub で見る →</a>
@@ -818,8 +818,8 @@
         <div class="wrap">
           <div class="head">
             <span class="eyebrow">Features</span>
-            <h2>読むことだけに、磨きをかける。</h2>
-            <p class="lead">書く道具ではなく、読む道具。だから起動が軽く、画面はいつも静かです。</p>
+            <h2>読むのが先。直したくなったら、編集も。</h2>
+            <p class="lead">開くのは読むための画面なので、起動が軽く、画面は静かです。エディタは、使うときにだけ読み込みます。</p>
           </div>
           <div class="bento">
             <article class="card wide reveal">
@@ -828,14 +828,14 @@
               <p>エディタで保存した瞬間に描き直し、読んでいた位置とズームはそのまま。章や参考文献、画像を別ファイルに分けていても、それらの保存で更新されます。AI エージェントがファイルを書き換えていく様子も、そのまま追えます。</p>
             </article>
             <article class="card wide reveal">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4V3h6v1M9.5 10h5M9.5 14h5" /></svg>
-              <h3><kbd>⌘V</kbd> で貼り付けて、すぐ読む</h3>
-              <p>クリップボードの内容から Markdown・Typst・LaTeX・Mermaid を自動判定して表示。ファイルを作る必要はありません。ドロップにも対応しています。</p>
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5" /><rect x="13" y="4" width="8" height="16" rx="1.5" /><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3" /></svg>
+              <h3>ライブプレビューつきの編集</h3>
+              <p><kbd>⌘E</kbd> でウィンドウを二つに分け、左にソース、右に描画結果を並べます。入力に合わせてプレビューが更新されます。色分け・検索と置換、Typst は補完とエラーの波線つき。<kbd>⌘S</kbd> で保存し、その間にディスクのファイルが変わっていたら、上書きせずに確認します。</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M5 4l5 15 2.2-6.3L19 10.5z" /><path d="M13 13l5 5" /></svg>
               <h3>⌘クリックでソースへ</h3>
-              <p>Typst・LaTeX の PDF を <kbd>⌘</kbd> クリックすると、エディタの該当行を開きます（Typst は行・列、LaTeX は SyncTeX）。</p>
+              <p>Typst・LaTeX の PDF（編集中は Markdown も）を <kbd>⌘</kbd> クリックすると、内蔵エディタか、お使いのエディタの該当行へ（Typst は行・列、LaTeX は SyncTeX）。</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12" /><circle cx="18" cy="6" r="1.2" /></svg>
@@ -854,8 +854,8 @@
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="10" rx="2" /><rect x="9" y="9" width="12" height="10" rx="2" /></svg>
-              <h3>1 ファイル 1 ウィンドウ</h3>
-              <p>複数のファイルを渡すと別ウィンドウで開きます。文書内の相対リンクは Washi の中でそのまま辿れます。</p>
+              <h3>貼り付けでも、ドロップでも</h3>
+              <p><kbd>⌘V</kbd> でクリップボードの内容を判定して表示し、ファイルのドロップも使えます。複数のファイルは別ウィンドウで開き、文書内の相対リンクは Washi の中で辿れます。</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 13h6M9 17h4" /></svg>
@@ -887,6 +887,7 @@
             <button class="tab" role="tab" aria-selected="false" data-target="s2">Mermaid・ダーク</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s3">Typst</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s4">LaTeX</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s5">編集</button>
           </div>
           <div class="shots">
             <figure class="shot on" id="s1" style="margin: 0">
@@ -904,6 +905,10 @@
             <figure class="shot" id="s4" style="margin: 0">
               <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="../assets/shot-latex.jpg" width="1221" height="641" alt="LaTeX の論文を PDF として表示" /></div>
               <figcaption>LaTeX は latexmk、無ければ tectonic でコンパイル。エラーは行番号つきで表示します。</figcaption>
+            </figure>
+            <figure class="shot" id="s5" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — 編集</span></div><img loading="lazy" src="../assets/shot-split.jpg" width="1221" height="641" alt="左にエディタ、右にライブプレビュー" /></div>
+              <figcaption><kbd>⌘E</kbd> で左にソース、右にプレビュー。入力に合わせて更新されます。</figcaption>
             </figure>
           </div>
         </div>
@@ -967,7 +972,7 @@
           <div class="head">
             <span class="eyebrow">Compare</span>
             <h2>3 形式すべてを扱う、ほかのアプリと。</h2>
-            <p class="lead">Markdown・Typst・LaTeX をファイルとして開けるアプリとの比較です。書くなら Oleafly・Texpile・hibi・Quire Writer、読むなら Washi や Typeset Viewer、という住み分けだと考えています。</p>
+            <p class="lead">Markdown・Typst・LaTeX をファイルとして開けるアプリとの比較です。編集が中心なら Oleafly・Texpile・hibi・Quire Writer、読むのが中心で、ときどき直すなら Washi、読むだけなら Typeset Viewer、という住み分けだと考えています。</p>
           </div>
           <div class="table-wrap reveal">
             <table>
@@ -977,15 +982,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr><th>位置づけ</th><td class="us">閲覧専用</td><td>閲覧＋ノート・レビュー</td><td>エディタ</td><td>執筆ワークスペース</td><td>ノートエディタ</td><td>AI エージェント付き執筆アプリ</td></tr>
+                <tr><th>位置づけ</th><td class="us">ビューア（必要なときだけ編集）</td><td>閲覧＋ノート・レビュー</td><td>エディタ</td><td>執筆ワークスペース</td><td>ノートエディタ</td><td>AI エージェント付き執筆アプリ</td></tr>
                 <tr><th>ライセンス</th><td class="us"><span class="y">○</span> MIT</td><td><span class="n">×</span> 独自（ソース非公開）</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> GPL-3.0</td><td><span class="y">○</span> GPL-3.0</td></tr>
-                <tr><th>最新リリース</th><td class="us">0.1.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly のみ</td><td>v0.2.8</td></tr>
+                <tr><th>最新リリース</th><td class="us">1.0.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly のみ</td><td>v0.2.8</td></tr>
                 <tr><th>Markdown・Typst・LaTeX</th><td class="us"><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> アドオンで有効化</td><td><span class="y">○</span></td></tr>
                 <tr><th>Markdown に必要な外部ツール</th><td class="us">なし</td><td>Pandoc</td><td>なし</td><td>なし（Pandoc 同梱）</td><td>なし</td><td>なし</td></tr>
                 <tr><th>Mermaid</th><td class="us"><span class="y">○</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="y">○</span></td><td><span class="q">?</span></td></tr>
                 <tr><th>外部エディタの保存を自動反映</th><td class="us"><span class="y">○</span> 位置を維持（include・.bib・画像も監視）</td><td><span class="y">○</span> 位置を維持（include・.bib も監視）</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td></tr>
-                <tr><th>入力中のライブプレビュー</th><td class="us"><span class="n">×</span> 編集機能を持たないため</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> 横並び表示</td><td><span class="y">○</span></td></tr>
-                <tr><th>組み込みエディタ</th><td class="us"><span class="n">×</span> 意図的に持たない</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
+                <tr><th>入力中のライブプレビュー</th><td class="us"><span class="y">○</span> 横並び表示（<kbd>⌘E</kbd>）</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> 横並び表示</td><td><span class="y">○</span></td></tr>
+                <tr><th>組み込みエディタ</th><td class="us"><span class="y">○</span> 必要なときに開く（<kbd>⌘E</kbd>）</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
                 <tr><th>PDF → ソースへジャンプ</th><td class="us"><span class="y">○</span> Typst・LaTeX</td><td><span class="q">?</span> 記載なし</td><td><span class="q">?</span> 記載なし</td><td><span class="y">○</span> SyncTeX・tinymist</td><td><span class="q">?</span> 記載なし</td><td><span class="y">○</span> Typst は tinymist</td></tr>
                 <tr><th>LaTeX エンジン</th><td class="us">別途（tectonic / latexmk。Homebrew なら tectonic も入る）</td><td>別途（latexmk）</td><td>別途（TeX ディストリビューション）</td><td><span class="y">○</span> Tectonic を同梱</td><td>別途 Tectonic</td><td>別途（latexmk）</td></tr>
                 <tr><th>macOS の配布サイズ</th><td class="us">24 MB（zip）</td><td>28 MB（zip）</td><td><span class="q">?</span></td><td>191 MB（dmg）</td><td><span class="q">?</span> リリースなし</td><td>56 MB（dmg）</td></tr>

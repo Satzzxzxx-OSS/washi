@@ -67,7 +67,7 @@ export class OutlinePanel implements OutlineSink {
     if (nodes.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = "見出しがありません";
+      empty.textContent = "No headings";
       this.nav.replaceChildren(empty);
     } else {
       this.nav.replaceChildren(...this.buttons);

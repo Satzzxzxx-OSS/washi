@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 概要
 
-Washi（和紙）は Markdown / Typst / LaTeX / Mermaid / PDF を読むための閲覧専用ビューア（Tauri 2 + Rust + TypeScript、フレームワークなしの素の TS）。編集機能は意図的に持たない。ファイルの保存を監視し、スクロール位置とズームを保ったまま再描画する。UI の文言は日本語。README は英語のみで、短く保つ（比較表は要点だけ）。ランディングは日英の 2 ページ（`docs/index.html` が英語で既定、`docs/ja/index.html` が日本語。GitHub Pages の公開元は `/docs`）で、内容を変えるときは両方を揃える。
+Washi（和紙）は Markdown / Typst / LaTeX / Mermaid / PDF を読むためのビューア（Tauri 2 + Rust + TypeScript、フレームワークなしの素の TS）。開くのは常に「読む」画面で、⌘E で分割表示のエディタ（CodeMirror 6、遅延読み込み）を開ける。ファイルの保存を監視し、スクロール位置とズームを保ったまま再描画する。UI の文言（メニュー・画面・エラーメッセージ）は英語。README は英語のみで、短く保つ（比較表は要点だけ）。ランディングは日英の 2 ページ（`docs/index.html` が英語で既定、`docs/ja/index.html` が日本語。GitHub Pages の公開元は `/docs`）で、内容を変えるときは両方を揃える。
 
 ## コマンド
 
@@ -46,6 +46,19 @@ pnpm dev
 - `src/viewer.ts` — 描画の流れの中心。`Host`（Tauri 呼び出しの抽象）・`View[]` を注入して使うので、テストやモック環境でも差し替えられる。再描画のたびに `token` をインクリメントして古い描画結果を破棄し、`Scroll` でスクロール位置を保つ。
 - `src/views/` — `View` インターフェースの実装（Markdown の HTML、PDF は pdf.js）。`outline.ts` が目次、`jump.ts` がソースジャンプ、`api.ts` が Tauri `invoke` ラッパー。
 - Markdown は Rust 側（comrak）で HTML 化し、KaTeX・Mermaid・highlight.js はフロント側で後処理する。相対画像は埋め込み、`.md` / `.typ` / `.tex` への相対リンクは Washi 内で開く。
+
+## 編集機能（⌘E の分割表示）
+
+読むモードと CLI は編集機能の有無に影響されない（描画の `render(path)` は変えず、編集用は加算の別経路）。
+
+- Rust: `render::render_buffer(path, text)` が保存前の本文を描画し、`Rendered{output, diagnostics}` を返す（失敗しても診断は返る）。Typst は本物のパスで `Session` を保存し、LaTeX は同じフォルダの隠しファイル `.washi-buf-<stem>.tex`（`Mirror`。`Drop` で削除、起動時に 1 時間以上前のものを掃除、読み取り専用なら一時フォルダ）でコンパイルする。補完は `typst_ide::autocomplete`、前方検索は `jump_from_cursor` と `SyncTex::forward`。UTF-16（CodeMirror）⇄ UTF-8 バイト（Typst）⇄ コードポイント列（診断）の変換は `render/offsets.rs` の 1 か所。
+- 応答の形式は `[tag u8: 0 html / 1 pdf / 2 失敗][u32 BE 診断 JSON の長さ][診断 JSON][本体]`（`Rendered::into_wire` ⇄ `api.ts` の `decodeBuffer`）。既存の `render` の形式は変えない。
+- 保存: `files.rs` の `write_file` が、同じフォルダの一時ファイル＋`rename`（シンボリックリンクは先に解決、権限を引き継ぐ）で書き、ディスクのハッシュと `base_hash` が違えば `Conflict`。Tauri 側の `write_file` は `Documents::owns(label, path)`（そのウィンドウが開いているファイル）にしか書かない。
+- フロント `src/editor/`: DOM に依存しない純粋な部分（`buffer.ts` 本文と未保存の判定・`scheduler.ts` throttle/debounce・`session.ts` 保存・衝突・自動保存・`kinds.ts`・`lint.ts` 位置の対応・`split.ts`・`sync.ts`）は単体テストがある。`editor.ts`（CodeMirror の組み立て）・`languages.ts`・`complete.ts` は `controller.ts` が初回の ⌘E で動的に読み込み、`vite.config.ts` の `manualChunks` が `vendor-cm` に分ける（起動時のチャンクに CodeMirror を入れない）。
+- Typst の言語対応は `codemirror-lang-typst` 0.6.0（実験的。版を固定）の `/lezer` の部品を `languages.ts` で組み立てる。内蔵の linter は外す（波線はコンパイラの診断に一本化）。読み込めなければ簡易のトークナイザーに落ちる。
+- 描画の頻度は `kinds.ts` の `renderPolicy`（Markdown・Mermaid 150 ms throttle、Typst 400 ms throttle、LaTeX 1.2 秒 debounce と保存時）。`Viewer` の編集用の入口は `renderBuffer` / `leaveBuffer` / `setBufferHooks`。
+- 閉じる／終了の確認: ウィンドウは `onCloseRequested`、⌘Q は Rust の `RunEvent::ExitRequested`（`DirtyWindows` に未保存のウィンドウが居れば止めて `washi://quit-requested` を送る）。別のファイルを開くときは `EditingController.release()` が先に確認する。
+- ブラウザのハーネス（`e2e/`）は、`mock-tauri.ts` に編集用のモック（仮想ファイル `__files`、`__calls` の記録、簡易な描画）がある。`?realpreview=1` でプレビューに本物の fixture を使える（スクリーンショット用）。キー入力・メニュー・閉じる確認は、実機のウィンドウでの確認が別途必要。
 
 ## CLI の契約（変えるときの規則）
 

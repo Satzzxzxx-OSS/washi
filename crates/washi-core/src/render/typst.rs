@@ -88,12 +88,12 @@ impl Renderer for TypstRenderer {
             .unwrap()
             .get(path)
             .cloned()
-            .ok_or("まだコンパイルされていません。再読み込みしてください")?;
+            .ok_or("not compiled yet; reload and try again")?;
         Ok(session.locate_forward(line, column))
     }
 
     fn complete(&self, path: &Path, text: &str, offset: usize, explicit: bool) -> Result<Completions, String> {
-        let cursor = offsets::utf16_to_byte(text, offset).ok_or("位置が文字の途中です")?;
+        let cursor = offsets::utf16_to_byte(text, offset).ok_or("the position is inside a character")?;
         let root = path.parent().unwrap_or(Path::new("."));
         // 補完のためだけのエンジン。システムのフォントの走査と、パッケージのネットワーク取得は省く
         let engine = TypstEngine::builder()
@@ -110,7 +110,7 @@ impl Renderer for TypstRenderer {
                 let source = world.source(world.main()).ok()?;
                 typst_ide::autocomplete(&IdeAdapter(world), None::<&PagedDocument>, &source, cursor, explicit)
             })
-            .map_err(|e| format!("Typst を初期化できません: {e}"))?;
+            .map_err(|e| format!("cannot initialise Typst: {e}"))?;
         let Some((start, items)) = found else {
             return Ok(Completions { offset, items: Vec::new() });
         };
@@ -130,7 +130,7 @@ impl Renderer for TypstRenderer {
             .unwrap()
             .get(path)
             .cloned()
-            .ok_or("まだコンパイルされていません。再読み込みしてください")?;
+            .ok_or("not compiled yet; reload and try again")?;
         Ok(session.locate(page, x, y))
     }
 }
@@ -271,7 +271,7 @@ fn compile_full(source: String, root: &Path) -> (Result<Compiled, String>, Vec<D
             })?;
             Ok::<_, String>((pdf, document))
         })
-        .map_err(|e| format!("Typst を初期化できません: {e}"))
+        .map_err(|e| format!("cannot initialise Typst: {e}"))
         .and_then(|inner| inner);
     let result = built.map(|(pdf, document)| Compiled { pdf, document, engine });
     (result, diagnostics)

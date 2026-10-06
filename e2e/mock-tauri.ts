@@ -55,6 +55,13 @@ function renderBuffer(path: string, text: string) {
       const column = [...before[before.length - 1]].length + 1;
       return encode(2, [{ file: null, line, column, end_line: line, end_column: column + 4, severity: "error", message: "unknown variable: bad", hints: [] }], "error: unknown variable: bad");
     }
+    const warn = text.indexOf("#warn");
+    if (warn >= 0) {
+      const before = text.slice(0, warn).split("\n");
+      const line = before.length;
+      const column = [...before[before.length - 1]].length + 1;
+      return encode(0, [{ file: null, line, column, end_line: line, end_column: column + 5, severity: "warning", message: "unused", hints: [] }], miniMarkdown(text));
+    }
     return encode(0, [], miniMarkdown(text));
   }
   return encode(0, [], miniMarkdown(text));
@@ -83,9 +90,15 @@ w.__TAURI_INTERNALS__ = {
         return wire(String(args.path));
       case "render_text":
         return wire(params.get("text") ?? "showcase.md");
-      case "render_buffer":
+      case "render_buffer": {
         calls.push({ cmd, args });
+        // ?realpreview=1: スクリーンショット用に、本物の描画結果（fixture）をプレビューに使う
+        if (params.get("realpreview")) {
+          const old = new Uint8Array(await wire(String(args.path)));
+          return encode(old[0], [], new TextDecoder().decode(old.subarray(1)));
+        }
         return renderBuffer(String(args.path), String(args.text));
+      }
       case "read_text": {
         const text = files.get(String(args.path));
         if (text === undefined) throw new Error("ファイルが無い");

@@ -14,6 +14,7 @@ import {
 } from "@codemirror/view";
 import type { Diagnostic } from "../api";
 import { columnToOffset, toCmDiagnostics } from "./lint";
+import { countChars } from "./status";
 import { washiTheme } from "./theme";
 
 /** プログラムが本文を置き換えたとき（ディスクの内容の取り込み）は、`onChange` を呼ばない */
@@ -24,12 +25,16 @@ export interface CursorPosition {
   line: number;
   /** 1 始まり、コードポイントの数 */
   column: number;
+  /** 選択している文字数（コードポイント）。選択が無ければ 0 */
+  selected: number;
 }
 
 export interface EditorOptions {
   doc: string;
   language: Extension;
   extra?: Extension[];
+  /** 前に使っていた状態（元に戻す履歴ごと）で作り直す。あれば `doc` / `language` / `extra` は使わない */
+  restore?: EditorState;
   onChange(text: string): void;
   onCursor?(position: CursorPosition): void;
 }
@@ -52,15 +57,19 @@ export interface EditorHandle {
 }
 
 function cursorOf(state: EditorState): CursorPosition {
-  const head = state.selection.main.head;
+  const { head, from, to } = state.selection.main;
   const line = state.doc.lineAt(head);
-  return { line: line.number, column: [...line.text.slice(0, head - line.from)].length + 1 };
+  return {
+    line: line.number,
+    column: [...line.text.slice(0, head - line.from)].length + 1,
+    selected: from === to ? 0 : countChars(state.sliceDoc(from, to)),
+  };
 }
 
 export function createEditor(parent: HTMLElement, options: EditorOptions): EditorHandle {
-  const view = new EditorView({
-    parent,
-    state: EditorState.create({
+  const state =
+    options.restore ??
+    EditorState.create({
       doc: options.doc,
       extensions: [
         lineNumbers(),
@@ -79,7 +88,7 @@ export function createEditor(parent: HTMLElement, options: EditorOptions): Edito
           spellcheck: "false",
           autocorrect: "off",
           autocapitalize: "off",
-          "aria-label": "ソース",
+          "aria-label": "Source",
         }),
         washiTheme,
         options.language,
@@ -90,8 +99,10 @@ export function createEditor(parent: HTMLElement, options: EditorOptions): Edito
           if (update.selectionSet || update.docChanged) options.onCursor?.(cursorOf(update.state));
         }),
       ],
-    }),
-  });
+    });
+  const view = new EditorView({ parent, state });
+  // 戻ってきたときは、前にいた位置が見えるようにする
+  if (options.restore) view.dispatch({ effects: EditorView.scrollIntoView(state.selection.main.head, { y: "center" }) });
 
   return {
     getText: () => view.state.doc.toString(),

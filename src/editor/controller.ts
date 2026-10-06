@@ -1,12 +1,14 @@
+import type { EditorState } from "@codemirror/state";
 import { autocomplete, forwardLocate, locateSource, readText, writeFile, type Diagnostic } from "../api";
 import { basename } from "../paths";
 import type { Prefs } from "../prefs";
 import type { Scroll } from "../scroll";
 import type { Viewer } from "../viewer";
-import type { EditorHandle } from "./editor";
+import type { CursorPosition, EditorHandle } from "./editor";
 import { DIRTY_MARK, kindOf, type Kind } from "./kinds";
 import { EditSession, type Banner, type SessionHost } from "./session";
 import { applyEditorWidth, attachResizer } from "./split";
+import { countChars, nextDiagnostic, summarize } from "./status";
 import { elementForLine, sourceAt } from "./sync";
 
 /** カーソルが止まってから、プレビューをその行に合わせるまでの時間 */
@@ -14,6 +16,8 @@ const REVEAL_DELAY_MS = 150;
 /** 自分の保存で起きた変更の通知を、外からの変更と区別する時間 */
 const OWN_WRITE_WINDOW_MS = 800;
 const FLASH_MS = 1200;
+/** 文字数を数え直す間隔 */
+const COUNT_DELAY_MS = 150;
 
 export interface Elements {
   pane: HTMLElement;
@@ -59,6 +63,11 @@ export class EditingController {
   private lastRevealLine = 0;
   private failure: string | null = null;
   private entering = false;
+  /** ⌘E で読むに戻ったときの、エディタの状態（元に戻す履歴ごと）。同じファイルへ戻るときに使う */
+  private retained: { path: string; state: EditorState } | null = null;
+  private diagnostics: Diagnostic[] = [];
+  private chars = 0;
+  private countTimer: number | undefined;
 
   constructor(private readonly deps: Deps) {
     const { elements: el } = deps;
@@ -97,8 +106,12 @@ export class EditingController {
   /** ⌘E: 読む ⇄ 分割 */
   async toggle() {
     if (this.entering) return;
-    if (this.session) {
+    const session = this.session;
+    if (session) {
+      const state = this.handle?.state();
       if (!(await this.release())) return;
+      // 保存した（または元から変更が無い）ときだけ、履歴を残す。「保存しない」を選んだ本文は残さない
+      if (state && !session.dirty) this.retained = { path: session.path, state };
       await this.deps.viewer.leaveBuffer();
       return;
     }
@@ -110,7 +123,7 @@ export class EditingController {
     const path = viewer.currentPath;
     const kind = path ? kindOf(path) : null;
     if (!path || !kind) {
-      this.deps.toast(path ? "この種類のファイルは編集できません" : "ファイルを開いてから編集してください");
+      this.deps.toast(path ? "This kind of file cannot be edited" : "Open a file before editing");
       return;
     }
     this.entering = true;
@@ -120,7 +133,12 @@ export class EditingController {
         import("./languages"),
         readText(path),
       ]);
-      const [language, extra] = await Promise.all([languageFor(kind), this.extensionsFor(kind, path)]);
+      const restore =
+        this.retained?.path === path && this.retained.state.doc.toString() === disk.text ? this.retained.state : undefined;
+      this.retained = null;
+      const [language, extra] = restore
+        ? [[], []]
+        : await Promise.all([languageFor(kind), this.extensionsFor(kind, path)]);
       const session = new EditSession(this.sessionHost(path), path, disk, {
         kind,
         autosave: () => this.deps.prefs().autosave,
@@ -128,6 +146,7 @@ export class EditingController {
       this.session = session;
       this.kind = kind;
       this.failure = null;
+      this.diagnostics = [];
       applyEditorWidth(el.pane, this.deps.prefs().editorWidth);
       el.pane.hidden = false;
       el.resizer.hidden = false;
@@ -135,14 +154,25 @@ export class EditingController {
         doc: disk.text,
         language,
         extra,
-        onChange: (text) => session.edit(text),
+        restore,
+        // 状態は作り直しても残るので、呼ぶ時点のセッションに届くようにする
+        onChange: (text) => {
+          this.session?.edit(text);
+          this.countSoon();
+        },
         onCursor: (position) => {
-          this.showStatus(position.line, position.column);
+          this.showStatus(position);
           this.revealSoon();
         },
       });
+      this.chars = countChars(disk.text);
+      this.lastPosition = this.handle.cursor();
       viewer.setBufferHooks({
-        diagnostics: (list) => this.handle?.setDiagnostics(this.ownDiagnostics(list)),
+        diagnostics: (list) => {
+          this.diagnostics = this.ownDiagnostics(list);
+          this.handle?.setDiagnostics(this.diagnostics);
+          this.refreshStatus();
+        },
         failed: (message) => {
           this.failure = message;
           this.refreshStatus();
@@ -153,7 +183,7 @@ export class EditingController {
       this.handle.focus();
     } catch (e) {
       this.teardown();
-      this.deps.toast(`編集を始められませんでした: ${String(e)}`, 5000);
+      this.deps.toast(`Could not start editing: ${String(e)}`, 5000);
     } finally {
       this.entering = false;
     }
@@ -181,6 +211,7 @@ export class EditingController {
       dirtyChanged: (dirty) => {
         void this.deps.setTitle(`${dirty ? DIRTY_MARK : ""}${basename(path)} — Washi`);
         void this.deps.setDirty(dirty);
+        this.refreshStatus();
       },
       banner: (banner) => this.showBanner(banner),
       notify: (message) => this.deps.toast(message, 5000),
@@ -205,7 +236,7 @@ export class EditingController {
   async confirmDiscardOrSave(): Promise<boolean> {
     const session = this.session;
     if (!session?.dirty) return true;
-    const choice = await this.ask(`「${basename(session.path)}」の変更を保存しますか？`);
+    const choice = await this.ask(`Do you want to save the changes to "${basename(session.path)}"?`);
     if (choice === "cancel") return false;
     if (choice === "discard") return true;
     const outcome = await session.save();
@@ -229,6 +260,8 @@ export class EditingController {
   private teardown() {
     const { elements: el, viewer } = this.deps;
     clearTimeout(this.revealTimer);
+    clearTimeout(this.countTimer);
+    this.countTimer = undefined;
     this.session?.dispose();
     this.handle?.destroy();
     this.session = null;
@@ -247,7 +280,7 @@ export class EditingController {
     const session = this.session;
     if (!session) return;
     const outcome = await session.save();
-    if (outcome === "saved") this.deps.toast("保存しました", 1200);
+    if (outcome === "saved") this.deps.toast("Saved", 1200);
   }
 
   /** ディスクのファイルが変わった通知。編集中なら扱って `true` を返す（読むモードの再読み込みは不要） */
@@ -301,13 +334,13 @@ export class EditingController {
   toggleAutosave() {
     const autosave = !this.deps.prefs().autosave;
     this.deps.update({ autosave });
-    this.deps.toast(`自動保存: ${autosave ? "オン" : "オフ"}`);
+    this.deps.toast(`Autosave: ${autosave ? "on" : "off"}`);
   }
 
   toggleSyncCursor() {
     const syncCursor = !this.deps.prefs().syncCursor;
     this.deps.update({ syncCursor });
-    this.deps.toast(`カーソルの行をプレビューに表示: ${syncCursor ? "オン" : "オフ"}`);
+    this.deps.toast(`Show the cursor line in the preview: ${syncCursor ? "on" : "off"}`);
   }
 
   // ---- 通知とステータス ----
@@ -324,38 +357,81 @@ export class EditingController {
     const text = document.createElement("span");
     el.append(text);
     if (banner.kind === "conflict") {
-      text.textContent = "ディスク上のファイルが、別の場所で変更されました。";
+      text.textContent = "The file on disk was changed elsewhere.";
       el.append(
-        button("自分の版を保つ", () => this.session?.keepMine()),
-        button("ディスクの版を読み込む", () => void this.session?.loadDisk()),
+        button("Keep mine", () => this.session?.keepMine()),
+        button("Load the disk version", () => void this.session?.loadDisk()),
       );
     } else {
-      text.textContent = `保存できませんでした: ${banner.message}`;
-      el.append(button("閉じる", () => this.showBanner(null)));
+      text.textContent = `Could not save: ${banner.message}`;
+      el.append(button("Dismiss", () => this.showBanner(null)));
     }
   }
 
-  private lastPosition = { line: 1, column: 1 };
+  private lastPosition: CursorPosition = { line: 1, column: 1, selected: 0 };
 
-  private showStatus(line: number, column: number) {
-    this.lastPosition = { line, column };
+  private showStatus(position: CursorPosition) {
+    this.lastPosition = position;
     this.refreshStatus();
   }
 
+  /** 入力のたびには数えず、少し間を置いて数え直す */
+  private countSoon() {
+    if (this.countTimer !== undefined) return;
+    this.countTimer = window.setTimeout(() => {
+      this.countTimer = undefined;
+      if (!this.handle) return;
+      this.chars = countChars(this.handle.getText());
+      this.refreshStatus();
+    }, COUNT_DELAY_MS);
+  }
+
   private refreshStatus() {
-    const { line, column } = this.lastPosition;
     const status = this.deps.elements.status;
     status.replaceChildren();
-    const pos = document.createElement("span");
-    pos.textContent = `${line}:${column}`;
-    status.append(pos);
+    if (!this.session) return;
+    const left = document.createElement("span");
+    left.className = "left";
+    const saved = document.createElement("span");
+    saved.className = this.session.dirty ? "unsaved" : "saved";
+    saved.textContent = this.session.dirty ? `${DIRTY_MARK}Unsaved` : "Saved";
+    const { line, column, selected } = this.lastPosition;
+    const where = document.createElement("span");
+    where.textContent = `${line}:${column}`;
+    const size = document.createElement("span");
+    size.textContent = `${this.chars.toLocaleString()} chars${selected ? ` (${selected.toLocaleString()} selected)` : ""}`;
+    left.append(saved, where, size);
+
+    const right = document.createElement("span");
+    right.className = "right";
+    const { errors, warnings } = summarize(this.diagnostics);
+    if (errors) right.append(this.diagnosticButton("error", errors));
+    if (warnings) right.append(this.diagnosticButton("warning", warnings));
     if (this.failure) {
       const fail = document.createElement("span");
       fail.className = "failure";
-      fail.textContent = `プレビューを更新できません: ${this.failure.split("\n")[0]}`;
+      fail.textContent = `Cannot update the preview: ${this.failure.split("\n")[0]}`;
       fail.title = this.failure;
-      status.append(fail);
+      right.append(fail);
     }
+    status.append(left, right);
+  }
+
+  /** `✕ 2` / `⚠ 1`。押すたびに、次の診断の位置へ移る */
+  private diagnosticButton(severity: "error" | "warning", count: number) {
+    const noun = severity === "error" ? "error" : "warning";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = severity;
+    b.textContent = `${severity === "error" ? "✕" : "⚠"} ${count}`;
+    b.title = `${count} ${noun}${count === 1 ? "" : "s"}. Click to go to the next`;
+    b.addEventListener("click", () => {
+      const handle = this.handle;
+      if (!handle) return;
+      const next = nextDiagnostic(this.diagnostics, severity, handle.cursor());
+      if (next) handle.goTo(next.line, next.column);
+    });
+    return b;
   }
 
   // ---- ソース → プレビューの位置合わせ ----

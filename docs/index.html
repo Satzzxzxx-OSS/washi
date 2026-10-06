@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Washi — a quiet viewer for Markdown, Typst and LaTeX</title>
+    <title>Washi — a quiet viewer and editor for Markdown, Typst and LaTeX</title>
     <meta
       name="description"
       content="A lightweight viewer that re-renders on every save, for reading Markdown, Typst, LaTeX, Mermaid and PDF. Built with Tauri + Rust, MIT licensed."
@@ -785,7 +785,7 @@
           <span class="eyebrow">Markdown · Typst · LaTeX viewer</span>
           <h1 id="title" aria-label="Read quietly, on every save.">Read <em>quietly</em>, on every save.</h1>
           <p class="lead">
-            Markdown, Typst, LaTeX, Mermaid and PDF in one lightweight viewer. Leave editing to your favorite editor or AI agent; Washi redraws on every save while keeping your scroll position.
+            Markdown, Typst, LaTeX, Mermaid and PDF in one lightweight viewer. It redraws on every save while keeping your scroll position, and when you want to change something, press <kbd>⌘E</kbd> for an editor with a live preview beside it.
           </p>
           <div class="cta">
             <a class="btn primary magnet" href="https://github.com/kiwamizamurai/washi">View on GitHub →</a>
@@ -818,8 +818,8 @@
         <div class="wrap">
           <div class="head">
             <span class="eyebrow">Features</span>
-            <h2>Polished for reading, and only reading.</h2>
-            <p class="lead">A tool for reading, not writing. That is why it starts fast and the screen stays quiet.</p>
+            <h2>Reading first. Editing when you want.</h2>
+            <p class="lead">It opens as a reader, so it starts fast and the screen stays quiet. The editor is loaded only when you ask for it.</p>
           </div>
           <div class="bento">
             <article class="card wide reveal">
@@ -828,14 +828,14 @@
               <p>It redraws as soon as your editor saves, keeping your reading position and zoom. Split chapters, bibliographies and images into separate files and saving any of them updates the view. You can follow an AI agent rewriting a file as it happens.</p>
             </article>
             <article class="card wide reveal">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4V3h6v1M9.5 10h5M9.5 14h5" /></svg>
-              <h3>Paste with <kbd>⌘V</kbd> and read</h3>
-              <p>Washi detects Markdown, Typst, LaTeX or Mermaid from the clipboard and shows it. No file needed. Dropping a file works too.</p>
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5" /><rect x="13" y="4" width="8" height="16" rx="1.5" /><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3" /></svg>
+              <h3>Edit with a live preview</h3>
+              <p>Press <kbd>⌘E</kbd> to split the window: your source on the left, the rendered result on the right, updating as you type. Syntax highlighting, search and replace, and for Typst, completion and error squiggles. Save with <kbd>⌘S</kbd>; if the file changed on disk meanwhile, Washi asks instead of overwriting.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M5 4l5 15 2.2-6.3L19 10.5z" /><path d="M13 13l5 5" /></svg>
               <h3><kbd>⌘</kbd>-click to the source</h3>
-              <p><kbd>⌘</kbd>-click a Typst or LaTeX PDF to open the matching line in your editor (line and column for Typst, SyncTeX for LaTeX).</p>
+              <p><kbd>⌘</kbd>-click a Typst or LaTeX PDF (or Markdown) to jump to the matching line, in the built-in editor or your own (line and column for Typst, SyncTeX for LaTeX).</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12" /><circle cx="18" cy="6" r="1.2" /></svg>
@@ -854,8 +854,8 @@
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="10" rx="2" /><rect x="9" y="9" width="12" height="10" rx="2" /></svg>
-              <h3>One file, one window</h3>
-              <p>Pass several files and each opens in its own window. Relative links inside a document are followed within Washi.</p>
+              <h3>Paste or drop to read</h3>
+              <p><kbd>⌘V</kbd> detects Markdown, Typst, LaTeX or Mermaid from the clipboard, and dropping a file works too. Several files open in their own windows, and relative links are followed within Washi.</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 13h6M9 17h4" /></svg>
@@ -887,6 +887,7 @@
             <button class="tab" role="tab" aria-selected="false" data-target="s2">Mermaid · dark</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s3">Typst</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s4">LaTeX</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s5">Edit</button>
           </div>
           <div class="shots">
             <figure class="shot on" id="s1" style="margin: 0">
@@ -904,6 +905,10 @@
             <figure class="shot" id="s4" style="margin: 0">
               <div class="window"><div class="bar"><i></i><i></i><i></i><span>paper.tex</span></div><img loading="lazy" src="assets/shot-latex.jpg" width="1221" height="641" alt="A LaTeX paper shown as a PDF" /></div>
               <figcaption>LaTeX is compiled with latexmk, or tectonic if that is missing. Errors are shown with line numbers.</figcaption>
+            </figure>
+            <figure class="shot" id="s5" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — edit</span></div><img loading="lazy" src="assets/shot-split.jpg" width="1221" height="641" alt="The editor on the left and the live preview on the right" /></div>
+              <figcaption><kbd>⌘E</kbd> splits the window: the source on the left, the preview on the right, updating as you type.</figcaption>
             </figure>
           </div>
         </div>
@@ -977,15 +982,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr><th>Role</th><td class="us">Viewer only</td><td>Viewer + notes and review</td><td>Editor</td><td>Writing workspace</td><td>Note editor</td><td>Writing app with an AI agent</td></tr>
+                <tr><th>Role</th><td class="us">Viewer, with an editor on demand</td><td>Viewer + notes and review</td><td>Editor</td><td>Writing workspace</td><td>Note editor</td><td>Writing app with an AI agent</td></tr>
                 <tr><th>License</th><td class="us"><span class="y">○</span> MIT</td><td><span class="n">×</span> Proprietary (closed source)</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> AGPL-3.0</td><td><span class="y">○</span> GPL-3.0</td><td><span class="y">○</span> GPL-3.0</td></tr>
-                <tr><th>Latest release</th><td class="us">0.1.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly only</td><td>v0.2.8</td></tr>
+                <tr><th>Latest release</th><td class="us">1.0.0</td><td>v0.8.0</td><td>v1.3.0</td><td>v0.4.5</td><td>nightly only</td><td>v0.2.8</td></tr>
                 <tr><th>Markdown, Typst, LaTeX</th><td class="us"><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> enabled in Settings</td><td><span class="y">○</span></td></tr>
                 <tr><th>External tool for Markdown</th><td class="us">None</td><td>Pandoc</td><td>None</td><td>None (Pandoc bundled)</td><td>None</td><td>None</td></tr>
                 <tr><th>Mermaid</th><td class="us"><span class="y">○</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="q">?</span></td><td><span class="y">○</span></td><td><span class="q">?</span></td></tr>
                 <tr><th>Auto-refresh on external save</th><td class="us"><span class="y">○</span> keeps position (also includes, .bib, images)</td><td><span class="y">○</span> keeps position (also watches includes, .bib)</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td></tr>
-                <tr><th>Live preview while typing</th><td class="us"><span class="n">×</span> no editor</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> side by side</td><td><span class="y">○</span></td></tr>
-                <tr><th>Built-in editor</th><td class="us"><span class="n">×</span> deliberately none</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
+                <tr><th>Live preview while typing</th><td class="us"><span class="y">○</span> side by side (<kbd>⌘E</kbd>)</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span> side by side</td><td><span class="y">○</span></td></tr>
+                <tr><th>Built-in editor</th><td class="us"><span class="y">○</span> opens on demand (<kbd>⌘E</kbd>)</td><td><span class="n">×</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td><td><span class="y">○</span></td></tr>
                 <tr><th>PDF → source jump</th><td class="us"><span class="y">○</span> Typst, LaTeX</td><td><span class="q">?</span> not documented</td><td><span class="q">?</span> not documented</td><td><span class="y">○</span> SyncTeX, tinymist</td><td><span class="q">?</span> not documented</td><td><span class="y">○</span> tinymist for Typst</td></tr>
                 <tr><th>LaTeX engine</th><td class="us">External (tectonic / latexmk; Homebrew installs tectonic)</td><td>External (latexmk)</td><td>External (TeX distribution)</td><td><span class="y">○</span> Tectonic bundled</td><td>External Tectonic</td><td>External (latexmk)</td></tr>
                 <tr><th>macOS download size</th><td class="us">24 MB (zip)</td><td>28 MB (zip)</td><td><span class="q">?</span></td><td>191 MB (dmg)</td><td><span class="q">?</span> no releases</td><td>56 MB (dmg)</td></tr>

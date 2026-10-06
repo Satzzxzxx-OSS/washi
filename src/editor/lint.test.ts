@@ -82,7 +82,7 @@ describe("toCmDiagnostics", () => {
     ];
     const out = toCmDiagnostics(doc, list);
     expect(out).toHaveLength(1);
-    expect(out[0].message).toBe("here\nヒント: try x\nヒント: or y");
+    expect(out[0].message).toBe("here\nHint: try x\nHint: or y");
   });
 
   it("maps warnings to the warning severity", () => {

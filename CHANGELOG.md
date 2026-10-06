@@ -6,6 +6,19 @@ The `washi` command-line interface (the `--json` output, exit codes, and the std
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-07
+
+### Added
+- **Editing with a live preview.** `⌘E` splits the window into a CodeMirror 6 editor and the preview for Markdown, Typst, LaTeX and Mermaid (not PDF). Files still open for reading; the editor is a lazy chunk loaded only on first use. The preview renders unsaved text (`render_buffer`) while keeping relative images, `#include` and `\input` working. Markdown and Mermaid render at most every 150 ms, Typst every 400 ms, and LaTeX about 1.2 s after typing stops and on save.
+- Editor features: syntax highlighting, line numbers, undo and redo, search and replace, and for Typst, completion (`typst-ide`) and error and warning squiggles from the compiler. A failed render keeps the last good preview and shows the message in the status bar.
+- Saving: `⌘S`, a `●` in the title for unsaved changes, atomic writes that follow symlinks and keep permissions, optional autosave (File → "Toggle autosave"; one second of idle, at most five seconds), and a confirmation when closing a window or quitting with unsaved changes.
+- Conflict handling: if the file changes on disk while there are unsaved edits, Washi shows a banner to keep your version or load the disk's, and never overwrites silently. The app writes only to the file a window has open.
+- Source and preview sync: `⌘`-click the preview to move the cursor to the matching source line (Markdown, Typst, LaTeX), and the preview scrolls to the cursor line (View → "Show the cursor line in the preview"). A draggable divider sets the pane widths.
+- A status bar with `Saved` / `Unsaved`, the cursor position, a character count (and the selection size), and error and warning counts that jump to the next problem when clicked.
+- Going back to reading with `⌘E` and returning to the same file keeps the undo history, as long as the file was saved and has not changed on disk meanwhile.
+- Menu: File → Save and Toggle autosave, Edit → Undo, Redo and Cut, View → Edit (split view).
+- Tauri commands for the editor: `render_buffer`, `autocomplete`, `forward_locate`, `locate_source`, `read_text`, `write_file`, `set_dirty`.
+
 ### Added
 - The `washi` CLI contract: every `--json` document carries `format_version` (`1`); failures are a JSON object on stderr with machine-readable `errors[].kind`; success is a JSON object on stdout. Exit codes: `0` success, `1` the app could not be launched, `2` invalid usage or files.
 - `files[].format` (`markdown`, `mermaid`, `typst`, `latex`, `pdf`) in the `--json` result, and `formats` plus a sorted `extensions` in `washi formats --json`.

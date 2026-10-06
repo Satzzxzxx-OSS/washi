@@ -43,7 +43,7 @@ pub struct FileWatcher(Mutex<HashMap<String, Watching>>);
 
 impl FileWatcher {
     pub fn watch(&self, app: AppHandle, label: &str, path: &Path) -> Result<(), String> {
-        let dir = path.parent().ok_or("フォルダを特定できません")?;
+        let dir = path.parent().ok_or("cannot determine the folder")?;
         let target = label.to_owned();
         let watching = Watching::new(dir, move || {
             let _ = app.emit_to(target.as_str(), CHANGED_EVENT, ());

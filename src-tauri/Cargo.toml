@@ -1,6 +1,6 @@
 [package]
 name = "washi"
-version = "0.1.0"
+version = "1.0.0"
 description = "Typst・Markdown・LaTeX を静かに読むための軽量ビューア"
 authors = ["kiwamizamurai"]
 edition = "2021"

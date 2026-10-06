@@ -36,7 +36,7 @@ impl<E: TexEngine> Renderer for TexRenderer<E> {
         let stem = path
             .file_stem()
             .and_then(|s| s.to_str())
-            .ok_or("ファイル名が不正です")?;
+            .ok_or("invalid file name")?;
         let out_dir = out_dir_for(path);
         fs::create_dir_all(&out_dir).map_err(|e| e.to_string())?;
 
@@ -44,7 +44,7 @@ impl<E: TexEngine> Renderer for TexRenderer<E> {
 
         fs::read(out_dir.join(format!("{stem}.pdf")))
             .map(Output::Pdf)
-            .map_err(|e| format!("PDF を読めません: {e}"))
+            .map_err(|e| format!("cannot read the PDF: {e}"))
     }
 
     fn render_text(&self, source: &str) -> Result<Output, String> {
@@ -97,7 +97,7 @@ impl<E: TexEngine> TexRenderer<E> {
         self.0.compile(&mirror.path, &out_dir, parent)?;
         fs::read(out_dir.join(format!("{}.pdf", mirror.stem)))
             .map(Output::Pdf)
-            .map_err(|e| format!("PDF を読めません: {e}"))
+            .map_err(|e| format!("cannot read the PDF: {e}"))
     }
 }
 
@@ -114,7 +114,7 @@ struct Mirror {
 
 impl Mirror {
     fn write(source: &Path, text: &str) -> Result<Self, String> {
-        let name = mirror_name(source).ok_or("ファイル名が不正です")?;
+        let name = mirror_name(source).ok_or("invalid file name")?;
         let stem = name.trim_end_matches(".tex").to_owned();
         let beside = source.parent().unwrap_or(Path::new(".")).join(&name);
         if fs::write(&beside, text).is_ok() {
@@ -124,7 +124,7 @@ impl Mirror {
         let dir = out_dir_for(source).join("buffer");
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let path = dir.join(&name);
-        fs::write(&path, text).map_err(|e| format!("保存前の本文を書けません: {e}"))?;
+        fs::write(&path, text).map_err(|e| format!("cannot write the unsaved text: {e}"))?;
         Ok(Self { path, stem })
     }
 }
@@ -158,7 +158,7 @@ fn remove_stale_mirrors(dir: &Path) {
 
 /// 直近のコンパイル（保存した文書か、保存前の本文）の SyncTeX を読む
 fn read_synctex(path: &Path) -> Result<SyncTex, String> {
-    let stem = path.file_stem().and_then(|s| s.to_str()).ok_or("ファイル名が不正です")?;
+    let stem = path.file_stem().and_then(|s| s.to_str()).ok_or("invalid file name")?;
     let out_dir = out_dir_for(path);
     let mirror_stem = mirror_name(path).map(|n| n.trim_end_matches(".tex").to_owned()).unwrap_or_default();
     let newest = [stem.to_owned(), mirror_stem]
@@ -168,7 +168,7 @@ fn read_synctex(path: &Path) -> Result<SyncTex, String> {
         .max_by_key(|(modified, _)| *modified)
         .map(|(_, p)| p)
         .unwrap_or_else(|| out_dir.join(format!("{stem}.synctex.gz")));
-    SyncTex::read(&newest).map_err(|_| "SyncTeX の情報がありません。再読み込みしてください".to_string())
+    SyncTex::read(&newest).map_err(|_| "no SyncTeX data; reload and try again".to_string())
 }
 
 /// SyncTeX の入力ファイル名 `input` が、`source` を指すか（隠しファイルも、元のファイルとして扱う）
@@ -205,25 +205,25 @@ pub struct SystemTexEngine;
 impl TexEngine for SystemTexEngine {
     fn compile(&self, source: &Path, out_dir: &Path, cwd: &Path) -> Result<(), String> {
         let (tool, mut command) = command_for(source, out_dir).ok_or(
-            "latexmk も tectonic も見つかりません。`brew install tectonic` などで入れてください",
+            "neither latexmk nor tectonic was found; install one, for example with `brew install tectonic`",
         )?;
         // 同じ文書の新しい描画が始まったら、この描画は打ち切られる
         let job = Job::start(source);
         let timeout = process::timeout_from_env();
         let output = process::run(command.current_dir(cwd), timeout, job.cancelled()).map_err(|e| match e {
-            RunError::Spawn(e) => format!("{tool} を起動できません: {e}"),
+            RunError::Spawn(e) => format!("cannot start {tool}: {e}"),
             RunError::TimedOut(limit) => format!(
-                "{tool} が {} 秒を超えたため中断しました。{} で秒数を変えられます",
+                "{tool} was stopped after {} seconds; set {} to change the limit",
                 limit.as_secs(),
                 process::TIMEOUT_ENV,
             ),
-            RunError::Cancelled => "新しい描画に置き換えられたため中断しました".to_string(),
+            RunError::Cancelled => "stopped because a newer render replaced it".to_string(),
         })?;
         if output.status.success() {
             return Ok(());
         }
         Err(format!(
-            "{tool} が失敗しました:\n{}\n{}",
+            "{tool} failed:\n{}\n{}",
             String::from_utf8_lossy(&output.stderr),
             tail(&String::from_utf8_lossy(&output.stdout), 4000),
         ))
@@ -337,7 +337,7 @@ mod tests {
 
         let started = std::time::Instant::now();
         let err = SystemTexEngine.compile(Path::new("/tmp/washi-hung.tex"), &dir, Path::new("/tmp")).unwrap_err();
-        assert!(err.contains("1 秒を超えた"), "{err}");
+        assert!(err.contains("after 1 seconds"), "{err}");
         assert!(started.elapsed() < std::time::Duration::from_secs(10));
 
         // 2 回目以降の偽エンジンはすぐ成功する。1 回目の実行中に同じ文書の描画が始まると、1 回目が打ち切られる
@@ -352,7 +352,7 @@ mod tests {
         let started = std::time::Instant::now();
         SystemTexEngine.compile(&source, &dir, Path::new("/tmp")).unwrap();
         let err = first.join().unwrap().unwrap_err();
-        assert!(err.contains("置き換え"), "{err}");
+        assert!(err.contains("newer render"), "{err}");
         assert!(started.elapsed() < std::time::Duration::from_secs(10));
         fs::remove_dir_all(&dir).ok();
     }
