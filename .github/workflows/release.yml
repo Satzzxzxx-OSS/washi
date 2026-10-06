@@ -4,8 +4,8 @@ name: Release
 #   gh release create v0.1.0 --title "Washi 0.1.0" --generate-notes
 # タグは v<major>.<minor>.<patch> で、package.json / tauri.conf.json / src-tauri/Cargo.toml のバージョンと一致させる。
 # 失敗したときは、Release とタグを消して直し、作り直す（または Actions から tag を指定して手動で再実行する）。
-# 事前に必要なもの: リポジトリの secret HOMEBREW_TAP_TOKEN
-#   （kiwamizamurai/homebrew-tap に contents:write できる fine-grained PAT）
+# tap の更新に必要なもの: リポジトリの secret HOMEBREW_TAP_TOKEN
+#   （kiwamizamurai/homebrew-tap に contents:write できる fine-grained PAT）。未設定なら tap の更新だけ警告つきで飛ばす。
 
 on:
   release:
@@ -82,7 +82,10 @@ jobs:
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          [ -n "$TAP_TOKEN" ] || { echo "HOMEBREW_TAP_TOKEN が未設定です"; exit 1; }
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::warning title=Homebrew tap not updated::HOMEBREW_TAP_TOKEN is not set, so the Cask in ${TAP_REPO} was not updated."
+            exit 0
+          fi
           version="${TAG#v}"
           sha256="${{ steps.pack.outputs.sha256 }}"
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
