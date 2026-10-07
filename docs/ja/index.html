@@ -807,55 +807,45 @@
           <div class="head">
             <span class="eyebrow">Features</span>
             <h2>読むのが先。直したくなったら、編集も。</h2>
-            <p class="lead">開くのは読むための画面なので、起動が軽く、画面は静かです。エディタは、使うときにだけ読み込みます。</p>
+            <p class="lead">開くのは、エディタではなく一冊の本のような画面。以下はすべて、ページを静かに保ち、いまの位置を見失わないための工夫です。</p>
           </div>
           <div class="bento">
             <article class="card wide reveal">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v4.5h-4.5" /></svg>
-              <h3>保存で、すぐ再描画</h3>
-              <p>エディタで保存した瞬間に描き直し、読んでいた位置とズームはそのまま。章や参考文献、画像を別ファイルに分けていても、それらの保存で更新されます。AI エージェントがファイルを書き換えていく様子も、そのまま追えます。</p>
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5" /><rect x="13" y="4" width="8" height="16" rx="1.5" /><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3" /></svg>
+              <h3>編集しながら、仕上がりを見る</h3>
+              <p><kbd>⌘E</kbd> でウィンドウが二つに分かれ、左にソース、右に仕上がりのページが並びます。打つたびにプレビューが更新され、もう一度押せば読む画面へ戻ります。エディタは使うときだけ読み込むので、ファイルを開くのは軽いままです。</p>
             </article>
             <article class="card wide reveal">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5" /><rect x="13" y="4" width="8" height="16" rx="1.5" /><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3" /></svg>
-              <h3>ライブプレビューつきの編集</h3>
-              <p><kbd>⌘E</kbd> でウィンドウを二つに分け、左にソース、右に描画結果を並べます。入力に合わせてプレビューが更新されます。色分け・検索と置換、Typst は補完とエラーの波線つき。<kbd>⌘S</kbd> で保存し、その間にディスクのファイルが変わっていたら、上書きせずに確認します。</p>
+              <svg class="ico" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v4.5h-4.5" /></svg>
+              <h3>エディタではなく、ファイルを追いかける</h3>
+              <p>どのエディタで保存しても、Washi はスクロール位置とズームを保ったまま、その場で描き直します。章・参考文献・画像も監視するので、どれを変えても表示が更新されます。</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M5 4l5 15 2.2-6.3L19 10.5z" /><path d="M13 13l5 5" /></svg>
-              <h3>⌘クリックでソースへ</h3>
-              <p>Typst・LaTeX の PDF（編集中は Markdown も）を <kbd>⌘</kbd> クリックすると、内蔵エディタか、お使いのエディタの該当行へ（Typst は行・列、LaTeX は SyncTeX）。</p>
+              <h3>ソースと画面が連動する</h3>
+              <p>プレビューのどこでも <kbd>⌘</kbd> クリックすれば、そのソースの行へ。カーソルを動かせば、プレビューも追いかけます。二つの画面の間で、いまの位置を見失いません。</p>
             </article>
             <article class="card reveal">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h12" /><circle cx="18" cy="6" r="1.2" /></svg>
-              <h3>目次と検索</h3>
-              <p>現在位置を追従する目次パネル。PDF のしおりにも対応し、<kbd>⌘F</kbd> では一致箇所まで自動でスクロールします。</p>
+              <svg class="ico" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z" /><path d="M8 4v5h7V4M8 20v-6h8v6" /></svg>
+              <h3>書いたものは、失わせない</h3>
+              <p>未保存の変更には ● が付きます。編集中にディスクのファイルが変わったら、上書きせずに、どちらを残すかを聞きます。未保存のまま閉じる・終了する・別のファイルを開くときは先に確認し、読む画面へ戻っても、元に戻す履歴は残ります。</p>
             </article>
             <article class="card reveal">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M5 18l4-12 3 8 2-5 5 9" /><path d="M3 20h18" /></svg>
-              <h3>数式・コード・図</h3>
-              <p>KaTeX の数式、色分けされたコード（コピーボタン付き）、Mermaid の図はクリックで拡大してドラッグ・ホイールで操作できます。</p>
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
+              <h3>すばやく、目的の場所へ</h3>
+              <p><kbd>⌘K</kbd> のコマンドパレットで、すべての操作・最近のファイル・見出し（先頭に <kbd>#</kbd> を付けます）を探せます。検索は「3 / 12」と件数を示し、細い線が読み進んだ割合を示し、目次は読む位置を追いかけます。</p>
+            </article>
+            <article class="card reveal">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 12l9 5 9-5M3 16l9 5 9-5" /></svg>
+              <h3>5 つの形式を、1 つの窓で</h3>
+              <p>Markdown・Typst・LaTeX・Mermaid・PDF を、KaTeX の数式、色分けされたコード、クリックで拡大できる図とともに。<kbd>⌘V</kbd> で貼り付けても、ファイルをドロップしても開けます。Typst はアプリの中でコンパイルするので、準備は要りません。</p>
             </article>
             <article class="card reveal">
               <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" /></svg>
               <h3>目に優しい</h3>
-              <p>システム・ライト・ダークのテーマ、本文幅の切替、<kbd>⌘</kbd>+/− やピンチでの拡大縮小。右から左へ書く文章も正しく表示します。</p>
+              <p>システム・ライト・ダークのテーマ、本文の幅とズームの調整、右から左へ書く文章の正しい表示。あたたかい紙の色合いで、長い文章でも疲れにくくします。</p>
             </article>
             <article class="card reveal">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="10" rx="2" /><rect x="9" y="9" width="12" height="10" rx="2" /></svg>
-              <h3>貼り付けでも、ドロップでも</h3>
-              <p><kbd>⌘V</kbd> でクリップボードの内容を判定して表示し、ファイルのドロップも使えます。複数のファイルは別ウィンドウで開き、文書内の相対リンクは Washi の中で辿れます。</p>
-            </article>
-            <article class="card reveal">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 13h6M9 17h4" /></svg>
-              <h3>PDF も、そのまま</h3>
-              <p>テキストの選択・検索、しおりの目次に対応。表示付近のページだけを描くので、長い PDF も軽く開けます。</p>
-            </article>
-            <article class="card wide reveal">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9l3 3-3 3M12 15h5" /></svg>
-              <h3>エージェントから、直接開ける</h3>
-              <p><code>washi report.typ</code> で、起動を待たずに開いて戻ります。<code>--json</code> の出力、事前の検証、<code>cat draft.md | washi -</code> での標準入力にも対応。AI エージェントの出力を、すぐ目で確認できます。</p>
-            </article>
-            <article class="card wide reveal">
               <svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M9 12l2.2 2.2L15.5 10" /></svg>
               <h3>手元で完結、安全側に倒す</h3>
               <p>文書内の生の HTML は除去し、アプリには厳しめの CSP を設定。テレメトリや解析はありません。Washi 自身が通信するのは、Typst の <code>@preview</code> パッケージを取得するときだけです（外部の tectonic は、必要な TeX パッケージを自分で取得することがあります）。</p>
@@ -876,6 +866,7 @@
             <button class="tab" role="tab" aria-selected="false" data-target="s3">Typst</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s4">LaTeX</button>
             <button class="tab" role="tab" aria-selected="false" data-target="s5">編集</button>
+            <button class="tab" role="tab" aria-selected="false" data-target="s6">パレット</button>
           </div>
           <div class="shots">
             <figure class="shot on" id="s1" style="margin: 0">
@@ -897,6 +888,10 @@
             <figure class="shot" id="s5" style="margin: 0">
               <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — 編集</span></div><img loading="lazy" src="../assets/shot-split.jpg" width="1221" height="641" alt="左にエディタ、右にライブプレビュー" /></div>
               <figcaption><kbd>⌘E</kbd> で左にソース、右にプレビュー。入力に合わせて更新されます。</figcaption>
+            </figure>
+            <figure class="shot" id="s6" style="margin: 0">
+              <div class="window"><div class="bar"><i></i><i></i><i></i><span>showcase.md — パレット</span></div><img loading="lazy" src="../assets/shot-palette.jpg" width="1221" height="641" alt="コマンドパレット" /></div>
+              <figcaption>コマンドパレットで、コマンド・最近のファイル・見出しを探せます。<kbd>#</kbd> を打つと、見出しだけに絞り込めます。</figcaption>
             </figure>
           </div>
         </div>

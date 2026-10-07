@@ -3,7 +3,7 @@
 # Washi（和紙）
 
 A lightweight viewer for reading Markdown, Typst, LaTeX, Mermaid and PDF quietly, re-rendering every time you save.
-It opens as a reader. When you want to change something, press `⌘E` for an editor with a live preview beside it, or keep using your favorite editor or AI agent: Washi redraws either way.
+It opens as a reader. When you want to change something, press `⌘E` for an editor with a live preview beside it, or keep using your favorite editor: Washi redraws either way.
 
 Website: [English](https://kiwamizamurai.github.io/washi/) · [日本語](https://kiwamizamurai.github.io/washi/ja/)
 
