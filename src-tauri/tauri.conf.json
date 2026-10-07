@@ -36,7 +36,7 @@
     "active": true,
     "targets": "all",
     "category": "Productivity",
-    "shortDescription": "A lightweight viewer for reading Typst, Markdown and LaTeX quietly",
+    "shortDescription": "Viewer and editor for Markdown, Typst, LaTeX, Mermaid and PDF",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

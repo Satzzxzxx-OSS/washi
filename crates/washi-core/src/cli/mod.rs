@@ -22,7 +22,7 @@ use crate::{
     render::{self, tools::find_tool, SourceLocation},
 };
 
-const HELP: &str = "washi - a quiet viewer for Markdown, Typst, LaTeX, Mermaid and PDF
+const HELP: &str = "washi - open Markdown, Typst, LaTeX, Mermaid and PDF in one window
 
 USAGE
   washi <file>...              Open files in Washi and return immediately

@@ -88,7 +88,7 @@ jobs:
 
             url "https://github.com/kiwamizamurai/washi/releases/download/v#{version}/Washi-#{version}-aarch64.zip"
             name "Washi"
-            desc "Quiet viewer for Markdown, Typst, LaTeX, Mermaid and PDF"
+            desc "Viewer and editor for Markdown, Typst, LaTeX, Mermaid and PDF"
             homepage "https://github.com/kiwamizamurai/washi"
 
             depends_on arch: :arm64
