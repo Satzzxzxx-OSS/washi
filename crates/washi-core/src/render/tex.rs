@@ -11,13 +11,10 @@ use super::{
     Output, PreviewPosition, Rendered, Renderer, SourceLocation,
 };
 
-/// 保存前の本文をコンパイルするための、同じフォルダの隠しファイルの接頭辞
 const MIRROR_PREFIX: &str = ".washi-buf-";
-/// これより古い隠しファイルは、異常終了の残りとして掃除する
 const STALE_MIRROR_AGE: std::time::Duration = std::time::Duration::from_secs(60 * 60);
 
 pub trait TexEngine: Sync {
-    /// `source` を `out_dir` にコンパイルする。`cwd` は作業フォルダで、`\input` や図の相対パスはここから解決される
     fn compile(&self, source: &Path, out_dir: &Path, cwd: &Path) -> Result<(), String>;
 }
 
@@ -85,8 +82,6 @@ impl<E: TexEngine> Renderer for TexRenderer<E> {
 }
 
 impl<E: TexEngine> TexRenderer<E> {
-    /// 保存前の本文を、同じフォルダの隠しファイル（`.washi-buf-<名前>.tex`）に書いてコンパイルする。
-    /// 作業フォルダが同じなので、`\input`・`.bib`・図の相対パスが、保存したときと同じように解決される
     fn render_mirror(&self, path: &Path, text: &str) -> Result<Output, String> {
         let parent = path.parent().unwrap_or(Path::new("."));
         let out_dir = out_dir_for(path);
@@ -101,12 +96,10 @@ impl<E: TexEngine> TexRenderer<E> {
     }
 }
 
-/// 隠しファイルの名前（拡張子つき）
 fn mirror_name(source: &Path) -> Option<String> {
     Some(format!("{MIRROR_PREFIX}{}.tex", source.file_stem()?.to_str()?))
 }
 
-/// コンパイルのために書いた隠しファイル。使い終わったら（`Drop` で）消す
 struct Mirror {
     path: PathBuf,
     stem: String,
@@ -120,7 +113,6 @@ impl Mirror {
         if fs::write(&beside, text).is_ok() {
             return Ok(Self { path: beside, stem });
         }
-        // フォルダに書き込めないとき（読み取り専用など）は、一時フォルダに書く。作業フォルダは元のままなので、相対パスは解決される
         let dir = out_dir_for(source).join("buffer");
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let path = dir.join(&name);
@@ -135,7 +127,6 @@ impl Drop for Mirror {
     }
 }
 
-/// 異常終了で残った古い隠しファイルを消す
 fn remove_stale_mirrors(dir: &Path) {
     let Ok(entries) = fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
@@ -156,7 +147,6 @@ fn remove_stale_mirrors(dir: &Path) {
     }
 }
 
-/// 直近のコンパイル（保存した文書か、保存前の本文）の SyncTeX を読む
 fn read_synctex(path: &Path) -> Result<SyncTex, String> {
     let stem = path.file_stem().and_then(|s| s.to_str()).ok_or("invalid file name")?;
     let out_dir = out_dir_for(path);
@@ -171,7 +161,6 @@ fn read_synctex(path: &Path) -> Result<SyncTex, String> {
     SyncTex::read(&newest).map_err(|_| "no SyncTeX data; reload and try again".to_string())
 }
 
-/// SyncTeX の入力ファイル名 `input` が、`source` を指すか（隠しファイルも、元のファイルとして扱う）
 fn same_file(source: &Path, input: &str) -> bool {
     fn clean(path: &Path) -> PathBuf {
         path.components().filter(|c| !matches!(c, std::path::Component::CurDir)).collect()
@@ -190,7 +179,6 @@ fn out_dir_for(path: &Path) -> PathBuf {
 
 fn resolve_input(source: &Path, input: &str) -> PathBuf {
     let input = Path::new(input);
-    // 保存前の本文をコンパイルしたときの隠しファイルは、元のファイルとして扱う
     if input.file_name().and_then(|n| n.to_str()) == mirror_name(source).as_deref() {
         return source.to_path_buf();
     }
@@ -207,7 +195,6 @@ impl TexEngine for SystemTexEngine {
         let (tool, mut command) = command_for(source, out_dir).ok_or(
             "neither latexmk nor tectonic was found; install one, for example with `brew install tectonic`",
         )?;
-        // 同じ文書の新しい描画が始まったら、この描画は打ち切られる
         let job = Job::start(source);
         let timeout = process::timeout_from_env();
         let output = process::run(command.current_dir(cwd), timeout, job.cancelled()).map_err(|e| match e {
@@ -315,8 +302,6 @@ mod tests {
         assert_eq!(tail("abc", 10), "abc");
     }
 
-    // PATH と環境変数を書き換えるので、他のテストと並走しないよう通常は除外する
-    // 実行: cargo test -p washi-core hung_engine -- --ignored
     #[test]
     #[cfg(unix)]
     #[ignore = "PATH と WASHI_COMPILE_TIMEOUT を書き換える"]
@@ -340,7 +325,6 @@ mod tests {
         assert!(err.contains("after 1 seconds"), "{err}");
         assert!(started.elapsed() < std::time::Duration::from_secs(10));
 
-        // 2 回目以降の偽エンジンはすぐ成功する。1 回目の実行中に同じ文書の描画が始まると、1 回目が打ち切られる
         fs::remove_file(dir.join("ran")).unwrap();
         std::env::set_var(process::TIMEOUT_ENV, "30");
         let source = PathBuf::from("/tmp/washi-hung-cancel.tex");
@@ -359,7 +343,6 @@ mod tests {
 
     use std::sync::Mutex;
 
-    /// 渡されたファイルと作業フォルダ、その時点のファイルの中身を覚えて、`<名前>.pdf` を書く偽のエンジン
     #[derive(Default)]
     struct SpyEngine {
         calls: Mutex<Vec<(PathBuf, PathBuf, String)>>,
@@ -417,7 +400,6 @@ mod tests {
         assert_eq!(body, "body");
         assert_eq!(cwd, &dir);
         if source.starts_with(&dir) {
-            // root などで、読み取り専用でも書けた環境
             return;
         }
         assert!(source.starts_with(out_dir_for(&path)), "{source:?}");

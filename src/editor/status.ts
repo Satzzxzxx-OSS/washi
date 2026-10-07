@@ -1,6 +1,5 @@
 import type { Diagnostic, Severity } from "../api";
 
-/** 文字数（Unicode のコードポイントの数。サロゲートペアは 1 文字） */
 export function countChars(text: string): number {
   let count = text.length;
   for (let i = 0; i < text.length - 1; i++) {
@@ -36,7 +35,6 @@ export interface Cursor {
   column: number;
 }
 
-/** カーソルより後ろにある、同じ重大度の最初の診断。末尾まで来たら先頭に戻る。無ければ `null` */
 export function nextDiagnostic(list: readonly Diagnostic[], severity: Severity, cursor: Cursor): Diagnostic | null {
   const same = list
     .filter((d) => d.severity === severity)

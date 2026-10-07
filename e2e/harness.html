@@ -24,7 +24,6 @@
       await import("/src/main.ts");
       window.dispatchEvent(new Event("DOMContentLoaded"));
 
-      // ?scroll=<見出しの先頭の文字> で、その見出しまでスクロールする（スクリーンショット用）
       const target = q.get("scroll");
       if (target) {
         for (let i = 0; i < 100; i++) {

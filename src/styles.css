@@ -96,7 +96,6 @@ body {
   display: none !important;
 }
 
-/* 読み進んだ割合。スクロールする領域の上端に貼り付く細い線（高さを取らない） */
 #progress {
   position: sticky;
   top: 0;
@@ -599,8 +598,6 @@ kbd {
     display: none !important;
   }
 }
-
-/* ---- 編集（分割表示） ---- */
 
 #editor-pane {
   display: flex;

@@ -1,5 +1,3 @@
-/** ファイルの種類ごとの、編集まわりの決まり。 */
-
 export type Kind = "markdown" | "typst" | "latex" | "mermaid";
 
 const KINDS: Record<string, Kind> = {
@@ -13,7 +11,6 @@ const KINDS: Record<string, Kind> = {
   mermaid: "mermaid",
 };
 
-/** 編集できる種類。PDF などは `null` */
 export function kindOf(path: string): Kind | null {
   const dot = path.lastIndexOf(".");
   if (dot < 0 || path.lastIndexOf("/") > dot) return null;
@@ -25,10 +22,6 @@ export interface RenderPolicy {
   delay: number;
 }
 
-/**
- * プレビューを描き直す頻度（最初の値。使ってみて調整する）。
- * Typst は描画を打ち切れないので、少し間を置く。LaTeX は外部のコマンドで重いので、入力が止まってから。
- */
 export function renderPolicy(kind: Kind): RenderPolicy {
   switch (kind) {
     case "markdown":
@@ -41,5 +34,4 @@ export function renderPolicy(kind: Kind): RenderPolicy {
   }
 }
 
-/** ウィンドウのタイトルに付ける、未保存の印 */
 export const DIRTY_MARK = "● ";

@@ -1,6 +1,5 @@
 import { rank, type Item, type Ranked, type Source } from "./items";
 
-/** コマンド・最近のファイル・見出しを、文字を打って探して実行する窓（⌘K）。 */
 export class CommandPalette {
   private readonly input: HTMLInputElement;
   private readonly list: HTMLUListElement;
@@ -10,14 +9,12 @@ export class CommandPalette {
 
   constructor(
     private readonly dialog: HTMLDialogElement,
-    /** 開くたびに、そのときの状況（編集中か、開いているファイル、見出し）で作り直す */
     private readonly build: () => Source,
   ) {
     this.input = dialog.querySelector("input")!;
     this.list = dialog.querySelector("ul")!;
     this.input.addEventListener("input", () => this.update());
     this.input.addEventListener("keydown", (e) => this.onKey(e));
-    // 外側（背景）のクリックで閉じる
     dialog.addEventListener("mousedown", (e) => {
       if (e.target === dialog) dialog.close();
     });
@@ -118,7 +115,6 @@ export class CommandPalette {
       }
       case "Home":
       case "End":
-        // 入力欄の中のカーソル移動はそのまま。Ctrl / ⌘ と一緒のときだけ、一覧の先頭・末尾へ
         if (!(e.metaKey || e.ctrlKey) || count === 0) return;
         e.preventDefault();
         this.selected = e.key === "Home" ? 0 : count - 1;
@@ -133,14 +129,12 @@ export class CommandPalette {
     }
   }
 
-  /** 窓を閉じて、フォーカスが元の場所へ戻ってから実行する（元に戻すなど、フォーカス先に作用するコマンドのため） */
   private run(item: Item) {
     this.dialog.close();
     setTimeout(() => void item.run(), 0);
   }
 }
 
-/** 一致した文字を `<mark>` で囲む（連続した文字は 1 つにまとめる） */
 function highlight(text: string, indices: number[]): Node[] {
   if (indices.length === 0) return [document.createTextNode(text)];
   const marked = new Set(indices);

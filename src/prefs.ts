@@ -8,11 +8,8 @@ export interface Prefs {
   theme: Theme;
   width: Width;
   outline: boolean;
-  /** 入力が止まったら自動で保存する（既定はオフ。手動の ⌘S だけ） */
   autosave: boolean;
-  /** カーソルのある行を、プレビューに表示する */
   syncCursor: boolean;
-  /** 分割表示で、エディタが占める割合（%） */
   editorWidth: number;
 }
 

@@ -51,7 +51,6 @@ pub struct Hit {
     pub line: u32,
 }
 
-/// ソースの行に対応する、プレビュー上の位置（PDF のポイント、ページは 1 始まり、y は行の上端）
 #[derive(Debug, PartialEq)]
 pub struct ForwardHit {
     pub page: u32,
@@ -115,8 +114,6 @@ impl SyncTex {
         synctex
     }
 
-    /// `matches` が真を返す入力ファイルの `line` 行に対応する位置（前方検索）。
-    /// 同じ行が無ければ、いちばん近い行を使う。同じ距離なら、先のページ・上の位置を選ぶ
     pub fn forward(&self, matches: impl Fn(&str) -> bool, line: u32) -> Option<ForwardHit> {
         let tags: HashSet<u32> = self
             .inputs
@@ -254,7 +251,6 @@ mod tests {
         let s = SyncTex::parse(SAMPLE);
         let hit = s.forward(is_a_tex, 10).unwrap();
         assert_eq!(hit.page, 1);
-        // 行の箱（hbox）の左上。行の中の文字の位置ではなく、行そのものを指す
         assert!((hit.x - bp(4_736_287)).abs() < 1e-6, "{hit:?}");
         assert!((hit.y - bp(8_000_000 - 800_000)).abs() < 1e-6, "{hit:?}");
         assert_eq!(s.forward(is_a_tex, 40).unwrap().page, 2);

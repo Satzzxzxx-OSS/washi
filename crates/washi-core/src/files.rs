@@ -1,9 +1,3 @@
-//! 編集したファイルの読み書き。Tauri に依存しないので、単体でテストできる。
-//!
-//! 保存は「同じフォルダの一時ファイルに書いて、`rename` で置き換える」。途中で失敗しても、元のファイルは壊れない。
-//! ディスク上の内容は、`hash_text` のハッシュで比べる。読み込んだときのハッシュ（`base_hash`）が、保存するときのディスクの内容と
-//! 違えば、その間に別のところで書き換えられたので `Conflict` を返し、黙って上書きしない。
-
 use std::{
     collections::hash_map::DefaultHasher,
     fs,
@@ -14,10 +8,8 @@ use std::{
 
 use serde::Serialize;
 
-/// これより大きなファイルは、エディタでは開かない
 const MAX_EDITABLE_BYTES: u64 = 20 * 1024 * 1024;
 
-/// 内容のハッシュ（16 桁の 16 進）。同じ内容かを比べるためだけに使う
 pub fn hash_text(text: &str) -> String {
     let mut hasher = DefaultHasher::new();
     text.hash(&mut hasher);
@@ -33,9 +25,7 @@ pub struct DiskText {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum SaveResult {
-    /// 書き込んだ。`hash` は、書き込んだ内容のハッシュ
     Saved { hash: String },
-    /// 読み込んだ後に、ディスクの内容が変わっている。`disk_hash` は、いまのディスクの内容のハッシュ
     Conflict { disk_hash: String },
 }
 
@@ -50,10 +40,7 @@ pub fn read_text(path: &Path) -> Result<DiskText, String> {
     Ok(DiskText { text, hash })
 }
 
-/// `text` を `path` に書く。`base_hash` は、編集を始めたときにディスクから読んだ内容のハッシュ。
-/// `force` が真なら、ディスクの内容が違っても上書きする（衝突の通知で「自分の版を保つ」を選んだとき）
 pub fn write_file(path: &Path, text: &str, base_hash: Option<&str>, force: bool) -> Result<SaveResult, String> {
-    // シンボリックリンクは、リンク先に書く（リンクそのものを置き換えない）
     let target = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
 
     if !force {
@@ -72,7 +59,6 @@ pub fn write_file(path: &Path, text: &str, base_hash: Option<&str>, force: bool)
         file.write_all(text.as_bytes())?;
         file.sync_all()?;
         drop(file);
-        // 元のファイルの権限を引き継ぐ
         if let Ok(meta) = fs::metadata(&target) {
             let _ = fs::set_permissions(&temp, meta.permissions());
         }
@@ -85,7 +71,6 @@ pub fn write_file(path: &Path, text: &str, base_hash: Option<&str>, force: bool)
     Ok(SaveResult::Saved { hash: hash_text(text) })
 }
 
-/// 同じフォルダの、隠しの一時ファイル（監視は、名前が `.` で始まるものを無視する）
 fn temp_path(dir: &Path, target: &Path) -> PathBuf {
     use std::sync::atomic::{AtomicU32, Ordering};
     static COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -216,7 +201,6 @@ mod tests {
         let result = write_file(&f, "new", None, false);
         fs::set_permissions(&d, fs::Permissions::from_mode(0o755)).unwrap();
         if result.is_ok() {
-            // root などで、読み取り専用でも書けた環境
             return;
         }
         assert_eq!(fs::read_to_string(&f).unwrap(), "original");

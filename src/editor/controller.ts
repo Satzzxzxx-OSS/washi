@@ -11,12 +11,9 @@ import { applyEditorWidth, attachResizer } from "./split";
 import { countChars, nextDiagnostic, summarize } from "./status";
 import { elementForLine, sourceAt } from "./sync";
 
-/** カーソルが止まってから、プレビューをその行に合わせるまでの時間 */
 const REVEAL_DELAY_MS = 150;
-/** 自分の保存で起きた変更の通知を、外からの変更と区別する時間 */
 const OWN_WRITE_WINDOW_MS = 800;
 const FLASH_MS = 1200;
-/** 文字数を数え直す間隔 */
 const COUNT_DELAY_MS = 150;
 
 export interface Elements {
@@ -39,7 +36,6 @@ export interface Deps {
   update(patch: Partial<Prefs>): void;
   toast(message: string, ms?: number): void;
   setTitle(title: string): Promise<void> | void;
-  /** ウィンドウに未保存の変更があるか（⌘Q の確認に使う） */
   setDirty(dirty: boolean): Promise<void> | void;
 }
 
@@ -53,7 +49,6 @@ function button(label: string, onClick: () => void) {
   return b;
 }
 
-/** 編集（分割表示）の全体。エディタ・保存・ディスクの変更・プレビューとの位置合わせを束ねる */
 export class EditingController {
   private session: EditSession | null = null;
   private handle: EditorHandle | null = null;
@@ -63,7 +58,6 @@ export class EditingController {
   private lastRevealLine = 0;
   private failure: string | null = null;
   private entering = false;
-  /** ⌘E で読むに戻ったときの、エディタの状態（元に戻す履歴ごと）。同じファイルへ戻るときに使う */
   private retained: { path: string; state: EditorState } | null = null;
   private diagnostics: Diagnostic[] = [];
   private chars = 0;
@@ -80,7 +74,6 @@ export class EditingController {
         applyEditorWidth(el.pane, percent);
       },
     );
-    // プレビュー（Markdown）の ⌘クリックで、ソースの位置へ
     el.markdown.addEventListener(
       "click",
       (e) => {
@@ -103,14 +96,12 @@ export class EditingController {
     return this.session?.dirty ?? false;
   }
 
-  /** ⌘E: 読む ⇄ 分割 */
   async toggle() {
     if (this.entering) return;
     const session = this.session;
     if (session) {
       const state = this.handle?.state();
       if (!(await this.release())) return;
-      // 保存した（または元から変更が無い）ときだけ、履歴を残す。「保存しない」を選んだ本文は残さない
       if (state && !session.dirty) this.retained = { path: session.path, state };
       await this.deps.viewer.leaveBuffer();
       return;
@@ -155,7 +146,6 @@ export class EditingController {
         language,
         extra,
         restore,
-        // 状態は作り直しても残るので、呼ぶ時点のセッションに届くようにする
         onChange: (text) => {
           this.session?.edit(text);
           this.countSoon();
@@ -218,12 +208,10 @@ export class EditingController {
     };
   }
 
-  /** 開いているファイル自身の診断だけを、エディタに出す */
   private ownDiagnostics(list: readonly Diagnostic[]) {
     return list.filter((d) => d.file === null);
   }
 
-  /** 編集をやめる。未保存なら確認する。`false` はキャンセル（そのまま編集を続ける） */
   async release(): Promise<boolean> {
     const session = this.session;
     if (!session) return true;
@@ -232,7 +220,6 @@ export class EditingController {
     return true;
   }
 
-  /** 未保存の変更があれば、保存・破棄・キャンセルを選ばせる。`true` は、閉じてよい */
   async confirmDiscardOrSave(): Promise<boolean> {
     const session = this.session;
     if (!session?.dirty) return true;
@@ -283,13 +270,11 @@ export class EditingController {
     if (outcome === "saved") this.deps.toast("Saved", 1200);
   }
 
-  /** ディスクのファイルが変わった通知。編集中なら扱って `true` を返す（読むモードの再読み込みは不要） */
   async diskChanged(): Promise<boolean> {
     const session = this.session;
     if (!session) return false;
     if (performance.now() - this.lastWrite < OWN_WRITE_WINDOW_MS) return true;
     const change = await session.diskChanged();
-    // 本文が同じなら、読み込み先（章・画像など）が変わったのかもしれない
     if (change === "ignore") session.refreshPreview();
     return true;
   }
@@ -310,14 +295,12 @@ export class EditingController {
     else document.execCommand("redo");
   }
 
-  /** エディタにフォーカスがあれば、貼り付けを引き受ける */
   paste(text: string) {
     if (!this.handle?.hasFocus()) return false;
     this.handle.replaceSelection(text);
     return true;
   }
 
-  /** プレビュー（PDF）の ⌘クリック。開いているファイルのソースなら、エディタのカーソルを動かして `true` */
   async revealSource(page: number, x: number, y: number): Promise<boolean> {
     const path = this.session?.path;
     if (!path || !this.handle) return false;
@@ -342,8 +325,6 @@ export class EditingController {
     this.deps.update({ syncCursor });
     this.deps.toast(`Show the cursor line in the preview: ${syncCursor ? "on" : "off"}`);
   }
-
-  // ---- 通知とステータス ----
 
   private showBanner(banner: Banner) {
     const el = this.deps.elements.banner;
@@ -375,7 +356,6 @@ export class EditingController {
     this.refreshStatus();
   }
 
-  /** 入力のたびには数えず、少し間を置いて数え直す */
   private countSoon() {
     if (this.countTimer !== undefined) return;
     this.countTimer = window.setTimeout(() => {
@@ -417,7 +397,6 @@ export class EditingController {
     status.append(left, right);
   }
 
-  /** `✕ 2` / `⚠ 1`。押すたびに、次の診断の位置へ移る */
   private diagnosticButton(severity: "error" | "warning", count: number) {
     const noun = severity === "error" ? "error" : "warning";
     const b = document.createElement("button");
@@ -434,8 +413,6 @@ export class EditingController {
     return b;
   }
 
-  // ---- ソース → プレビューの位置合わせ ----
-
   private revealSoon() {
     if (!this.deps.prefs().syncCursor) return;
     clearTimeout(this.revealTimer);
@@ -447,7 +424,6 @@ export class EditingController {
     const path = this.session?.path;
     if (!handle || !path || !this.kind) return;
     const { line, column } = handle.cursor();
-    // 同じ行のままなら、プレビューを動かさない（読んでいる位置を邪魔しない）
     if (line === this.lastRevealLine) return;
     this.lastRevealLine = line;
     const { scroll, elements: el } = this.deps;
@@ -474,7 +450,6 @@ export class EditingController {
       wrapper.append(marker);
       window.setTimeout(() => marker.remove(), FLASH_MS);
     } catch {
-      // 位置が分からないのは、よくあること。何もしない
     }
   }
 }

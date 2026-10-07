@@ -16,10 +16,8 @@ export interface Chrome {
   error: HTMLElement;
 }
 
-/** 編集中の本文を描画するときの通知先。失敗しても、直前の良いプレビューは残る */
 export interface BufferHooks {
   diagnostics(list: Diagnostic[]): void;
-  /** 描画に失敗したときのメッセージ。成功したら `null` */
   failed(message: string | null): void;
 }
 
@@ -51,13 +49,11 @@ export class Viewer {
     this.hooks = hooks ?? NO_HOOKS;
   }
 
-  /** 編集中の本文を描画する。ズームや目次はそのまま（`load` と違って、開き直さない） */
   async renderBuffer(path: string, text: string) {
     this.source = { buffer: { path, text } };
     await this.reload();
   }
 
-  /** 編集をやめて、ディスク上のファイルの表示に戻る */
   async leaveBuffer() {
     if (!this.source || !("buffer" in this.source)) return;
     this.source = { file: this.source.buffer.path };
@@ -95,7 +91,6 @@ export class Viewer {
         if (mine !== this.token) return;
         this.hooks.diagnostics(result.diagnostics);
         if (!result.ok) {
-          // 入力の途中は、エラーになるのがふつう。直前の良いプレビューを残して、メッセージだけ知らせる
           this.hooks.failed(result.message);
           return;
         }

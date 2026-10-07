@@ -9,14 +9,12 @@ const basename = (p: string) => p.split("/").pop() ?? p;
 
 async function wire(name: string) {
   const res = await fetch(`/e2e/fixtures/${basename(name)}.wire`);
-  // vite は、無いファイルにも index.html を返す
   if (!res.ok || res.headers.get("content-type")?.includes("text/html")) throw new Error(`fixture が無い: ${name}`);
   return res.arrayBuffer();
 }
 
 const w = window as unknown as Record<string, unknown>;
 
-// ---- 編集のモック: 仮想のファイルと、簡易な描画 ----
 const files = new Map<string, string>();
 const hashOf = (text: string) => `h${text.length}:${[...text].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)}`;
 const calls: { cmd: string; args: unknown }[] = [];
@@ -34,7 +32,6 @@ const encode = (tag: number, diagnostics: unknown[], body: string) => {
   return out.buffer;
 };
 
-/** 行頭の `# ` と段落だけの、Markdown もどき（`data-sourcepos` つき） */
 function miniMarkdown(text: string) {
   const lines = text.split("\n");
   const html: string[] = [];
@@ -93,7 +90,6 @@ w.__TAURI_INTERNALS__ = {
         return wire(params.get("text") ?? "showcase.md");
       case "render_buffer": {
         calls.push({ cmd, args });
-        // ?realpreview=1: スクリーンショット用に、本物の描画結果（fixture）をプレビューに使う
         if (params.get("realpreview")) {
           const old = new Uint8Array(await wire(String(args.path)));
           return encode(old[0], [], new TextDecoder().decode(old.subarray(1)));

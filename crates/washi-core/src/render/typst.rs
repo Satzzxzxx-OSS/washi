@@ -95,7 +95,6 @@ impl Renderer for TypstRenderer {
     fn complete(&self, path: &Path, text: &str, offset: usize, explicit: bool) -> Result<Completions, String> {
         let cursor = offsets::utf16_to_byte(text, offset).ok_or("the position is inside a character")?;
         let root = path.parent().unwrap_or(Path::new("."));
-        // 補完のためだけのエンジン。システムのフォントの走査と、パッケージのネットワーク取得は省く
         let engine = TypstEngine::builder()
             .main_file(text.to_owned())
             .search_fonts_with(
@@ -240,7 +239,6 @@ fn compile(source: String, root: &Path) -> Result<Compiled, String> {
     compile_full(source, root).0
 }
 
-/// コンパイルして、結果と、診断（エラーと警告）の両方を返す。失敗しても診断は返る
 fn compile_full(source: String, root: &Path) -> (Result<Compiled, String>, Vec<Diagnostic>) {
     let engine = TypstEngine::builder()
         .main_file(source)
@@ -277,7 +275,6 @@ fn compile_full(source: String, root: &Path) -> (Result<Compiled, String>, Vec<D
     (result, diagnostics)
 }
 
-/// 診断を、行・列つきの構造にする（`describe` は、同じ内容を人間向けの文にする）
 fn diagnostics_of(world: &dyn World, items: &[SourceDiagnostic]) -> Vec<Diagnostic> {
     items
         .iter()
@@ -479,7 +476,6 @@ mod tests {
     #[test]
     fn diagnostic_columns_count_code_points_not_bytes() {
         let dir = temp_project("buf-cols");
-        // 「日本😀」は 3 コードポイント、UTF-8 では 10 バイト。エラーはその後ろ
         let rendered = TypstRenderer.render_buffer(&dir.join("main.typ"), "日本😀 #undefined-fn()\n");
         let error = rendered.diagnostics.iter().find(|d| d.severity == DiagSeverity::Error).expect("エラーの診断");
         assert_eq!(error.line, 1);
@@ -512,7 +508,6 @@ mod tests {
         let position = TypstRenderer.locate_forward(&main, 5, 1).unwrap().expect("前方検索で位置が出る");
         assert_eq!(position.page, 1);
         assert!(position.x.is_finite() && position.y.is_finite() && position.y > 20.0, "{position:?}");
-        // 前方検索の位置は文字の基準線の左端。その少し上（文字の内側）を押せば、元の行に戻る
         let back = [-8.0, -4.0, 2.0]
             .into_iter()
             .find_map(|dy| TypstRenderer.locate(&main, 1, position.x + 2.0, position.y + dy).unwrap())
@@ -532,7 +527,6 @@ mod tests {
         let plain = TypstRenderer.complete(&path, "#lore", 5, false).unwrap();
         assert!(plain.items.iter().any(|c| c.label == "lorem" && c.kind == "func"), "{:?}", plain.items.iter().map(|c| &c.label).collect::<Vec<_>>());
 
-        // 日本語と絵文字の後ろでも、位置（UTF-16）が食い違わない
         let text = "日本語😀\n#lore";
         let cursor = text.encode_utf16().count();
         let after = TypstRenderer.complete(&path, text, cursor, false).unwrap();

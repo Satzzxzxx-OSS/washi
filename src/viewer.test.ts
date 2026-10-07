@@ -33,7 +33,6 @@ class FakeView implements View {
 
 type Deferred = { resolve: (o: Output) => void };
 
-/** `renderBuffer` の返事。テストが差し替える */
 const defaultBuffers = async (_path: string, text: string): Promise<BufferResult> => ({
   ok: true,
   output: { kind: "html", html: `buffer:${text}` },

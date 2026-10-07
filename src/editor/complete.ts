@@ -4,7 +4,6 @@ import type { CompletionItem, Completions } from "../api";
 
 type Ask = (text: string, offset: number, explicit: boolean) => Promise<Completions>;
 
-/** Typst の種類を、CodeMirror の補完の種類にする */
 export function completionType(kind: string): string {
   switch (kind) {
     case "func":
@@ -26,7 +25,6 @@ export function completionType(kind: string): string {
   }
 }
 
-/** `apply` が `${名前}` のスニペットなら、その場所を巡れるようにする */
 export function toOption(item: CompletionItem): Completion {
   const apply = item.apply ?? item.label;
   return {
@@ -37,7 +35,6 @@ export function toOption(item: CompletionItem): Completion {
   };
 }
 
-/** Rust 側の `typst_ide::autocomplete` に問い合わせる補完（Typst 用）。位置は UTF-16 のまま渡し、Rust 側がバイトに直す */
 export function typstCompletion(ask: Ask): Extension {
   const source = async (context: CompletionContext): Promise<CompletionResult | null> => {
     const found = await ask(context.state.doc.toString(), context.pos, context.explicit);

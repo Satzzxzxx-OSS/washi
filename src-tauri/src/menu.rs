@@ -39,7 +39,6 @@ fn item(app: &AppHandle, id: &str, label: &str, accelerator: Option<&str>) -> ta
     }
 }
 
-/// 「Washi について」に出す名前・版・アイコン。開発版（.app に梱包されていない）でも、汎用のフォルダにならないようにする
 fn about_metadata() -> AboutMetadata<'static> {
     AboutMetadata {
         name: Some("Washi".into()),

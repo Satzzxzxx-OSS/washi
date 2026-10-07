@@ -1,5 +1,3 @@
-//! 外部コマンドの実行。タイムアウトと、同じ文書の新しい描画による打ち切りに対応する。
-
 use std::{
     collections::HashMap,
     io::Read,
@@ -13,7 +11,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// コンパイルを打ち切るまでの秒数の既定値。tectonic の初回は TeX のサポートファイルを取得するので長めにしてある。
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(300);
 pub const TIMEOUT_ENV: &str = "WASHI_COMPILE_TIMEOUT";
 
@@ -44,10 +41,8 @@ pub struct Captured {
     pub stderr: Vec<u8>,
 }
 
-/// `command` を実行して終わりを待つ。`timeout` を超えるか `cancel` が立てば、子プロセスごと止める。
 pub fn run(command: &mut Command, timeout: Duration, cancel: &AtomicBool) -> Result<Captured, RunError> {
     command.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
-    // latexmk は pdflatex などを子として起動するので、グループごと止められるようにする
     #[cfg(unix)]
     std::os::unix::process::CommandExt::process_group(command, 0);
 
@@ -95,7 +90,6 @@ fn drain<R: Read + Send + 'static>(pipe: Option<R>) -> thread::JoinHandle<Vec<u8
 
 fn stop(child: &mut Child) {
     #[cfg(unix)]
-    // SAFETY: 自分で作ったプロセスグループ（pgid = 子の pid）にシグナルを送るだけ。
     unsafe {
         libc::killpg(child.id() as libc::pid_t, libc::SIGKILL);
     }
@@ -107,7 +101,6 @@ type Flags = HashMap<PathBuf, Arc<AtomicBool>>;
 
 static RUNNING: LazyLock<Mutex<Flags>> = LazyLock::new(Default::default);
 
-/// 文書ごとに 1 つだけ走らせるための札。同じ文書の新しい描画が始まると、古い方の `cancelled` が立つ。
 pub struct Job {
     key: PathBuf,
     flag: Arc<AtomicBool>,
@@ -131,7 +124,6 @@ impl Job {
 impl Drop for Job {
     fn drop(&mut self) {
         let mut running = RUNNING.lock().unwrap();
-        // 後から来た描画が札を入れ替えていたら、そちらを消さない
         if running.get(&self.key).is_some_and(|f| Arc::ptr_eq(f, &self.flag)) {
             running.remove(&self.key);
         }
@@ -153,7 +145,6 @@ mod tests {
     }
 
     fn alive(pid: i32) -> bool {
-        // SAFETY: シグナル 0 は存在確認だけで、何も送らない。
         unsafe { libc::kill(pid, 0) == 0 }
     }
 
@@ -232,7 +223,6 @@ mod tests {
         let new = Job::start(path);
         assert!(old.cancelled().load(Ordering::Relaxed));
         assert!(!new.cancelled().load(Ordering::Relaxed));
-        // 古い方が終わっても、新しい方の札は残る
         drop(old);
         let newest = Job::start(path);
         assert!(new.cancelled().load(Ordering::Relaxed));

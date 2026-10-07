@@ -20,7 +20,6 @@ export class FindBar {
   ) {
     this.input = form.querySelector("input")!;
     this.count = form.querySelector<HTMLElement>(".count");
-    // 打つたびに、全体の件数だけ出す（探すのは Enter / ボタンのとき）
     this.input.addEventListener("input", () => this.showCount(false));
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -65,10 +64,6 @@ export class FindBar {
     return found;
   }
 
-  /**
-   * 次（前）の一致を選択する。`window.find` はページ全体（検索バーの入力欄やエディタも）を探して、フォーカスまで動かすので、
-   * 件数と同じ数え方で、文書の中だけから選ぶ。数えられない（大文字小文字の変換で長さが変わる）ときは `null`
-   */
   private step(text: string, backwards: boolean): boolean | null {
     const source = this.source;
     if (!source) return null;
@@ -78,7 +73,6 @@ export class FindBar {
     return at !== null && source.select(at, text.length);
   }
 
-  /** 「3 / 12」。`jumped` でなければ（まだ移動していない）、番号の代わりに「–」を出す */
   private showCount(jumped: boolean, clear = false) {
     if (!this.count) return;
     const query = this.input.value;

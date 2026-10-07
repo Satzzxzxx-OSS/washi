@@ -26,9 +26,7 @@ export async function renderText(text: string): Promise<Output> {
 
 export type Severity = "error" | "warning";
 
-/** 編集中の本文に対する診断。行と列は 1 始まりで、列は Unicode のコードポイントの数 */
 export interface Diagnostic {
-  /** `null` は、描画した本文そのもの。ほかのファイルなら、プロジェクトの根からの相対パス */
   file: string | null;
   line: number;
   column: number;
@@ -39,7 +37,6 @@ export interface Diagnostic {
   hints: string[];
 }
 
-/** 保存前の本文の描画結果。失敗しても診断はある（画面は、直前の良いプレビューを残して、波線だけ更新する） */
 export type BufferResult =
   | { ok: true; output: Output; diagnostics: Diagnostic[] }
   | { ok: false; message: string; diagnostics: Diagnostic[] };
@@ -59,7 +56,6 @@ interface WireDiagnostic {
   hints: string[];
 }
 
-/** `[tag: u8][診断 JSON の長さ: u32 ビッグエンディアン][診断 JSON][本体]`（Rust の `Rendered::into_wire`） */
 export function decodeBuffer(wire: Uint8Array): BufferResult {
   const length = new DataView(wire.buffer, wire.byteOffset, wire.byteLength).getUint32(1, false);
   const json = new TextDecoder().decode(wire.subarray(HEADER_BYTES, HEADER_BYTES + length));
@@ -98,7 +94,6 @@ export type SaveResult = { status: "saved"; hash: string } | { status: "conflict
 
 export const readText = (path: string) => invoke<DiskText>("read_text", { path });
 
-/** `baseHash` は、読み込んだときのハッシュ。ディスクが変わっていれば `conflict` が返る。`force` のときだけ上書きする */
 export const writeFile = (path: string, text: string, baseHash: string | null, force = false) =>
   invoke<SaveResult>("write_file", { path, text, baseHash, force });
 
@@ -110,7 +105,6 @@ export interface CompletionItem {
 }
 
 export interface Completions {
-  /** 置き換える範囲の始まり（UTF-16、エディタの位置） */
   offset: number;
   items: CompletionItem[];
 }
@@ -124,7 +118,6 @@ export interface PreviewPosition {
   y: number;
 }
 
-/** ソースの行・列（1 始まり）に対応する、プレビュー上の位置（PDF のポイント）。前方検索 */
 export const forwardLocate = (path: string, line: number, column: number) =>
   invoke<PreviewPosition | null>("forward_locate", { path, line, column });
 
@@ -134,11 +127,9 @@ export interface LocatedSource {
   column: number;
 }
 
-/** プレビューの位置に対応するソースの位置。外部のエディタは起動しない */
 export const locateSource = (path: string, page: number, x: number, y: number) =>
   invoke<LocatedSource | null>("locate_source", { path, page, x, y });
 
-/** 未保存の変更があるかを Rust 側にも伝える（⌘Q の確認に使う） */
 export const setDirty = (dirty: boolean) => invoke<void>("set_dirty", { dirty });
 
 export const supportedExtensions =() =>

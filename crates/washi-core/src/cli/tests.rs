@@ -32,7 +32,6 @@ impl Harness {
         Self { dir, launcher: FakeLauncher::default() }
     }
 
-    /// 本物の `run` と同じ流れ（解析 → 失敗の出力 → 実行）を、stdout と stderr を別々に取って通す
     fn run(&self, list: &[&str], stdin: &str) -> (i32, String, String) {
         let argv = args(list);
         let (mut input, mut out, mut err) = (Cursor::new(stdin.as_bytes().to_vec()), Vec::new(), Vec::new());
@@ -76,8 +75,6 @@ fn keys(value: &Value) -> Vec<&str> {
     keys.sort_unstable();
     keys
 }
-
-// ---- 解析 ----
 
 #[test]
 fn no_arguments_or_gui_flag_start_the_app() {
@@ -136,8 +133,6 @@ fn json_is_detected_only_before_the_double_dash() {
     assert!(!wants_json(&args(&["--", "--json"])));
     assert!(!wants_json(&args(&["a.md"])));
 }
-
-// ---- 動作 ----
 
 #[test]
 fn opens_relative_files_by_absolute_path_and_launches_once() {
@@ -264,8 +259,6 @@ fn sanitize_keeps_names_filesystem_safe() {
     assert_eq!(sanitize("計画 v2"), "計画-v2");
     assert_eq!(sanitize("///"), "");
 }
-
-// ---- 契約（`--json` の形、ストリーム、終了コード）。ここを変える＝公開した契約を変える ----
 
 #[test]
 fn contract_open_success_json() {
@@ -465,8 +458,6 @@ fn contract_formats_reports_the_tex_engine_that_would_run() {
     assert_eq!(v["tools"]["tectonic"], "/opt/tectonic");
     assert!(v["tools"]["latexmk"].is_null());
 }
-
-// ---- 文書との同期 ----
 
 #[test]
 fn readme_documents_the_contract() {

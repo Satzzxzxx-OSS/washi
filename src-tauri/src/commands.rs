@@ -37,7 +37,6 @@ pub async fn render(
     let (output, dirs) = tauri::async_runtime::spawn_blocking(move || {
         let path = PathBuf::from(path);
         let output = render::render(&path);
-        // 描画に失敗しても調べる（読み込み先のファイルを直せば、また描画できるように）
         (output, render::dependency_dirs(&path))
     })
     .await
@@ -46,7 +45,6 @@ pub async fn render(
     Ok(Response::new(output?.into_wire()))
 }
 
-/// 保存前の本文を描画する。応答は `Rendered::into_wire` の形式（診断つき。失敗しても診断は返る）
 #[tauri::command]
 pub async fn render_buffer(
     window: WebviewWindow,
@@ -65,7 +63,6 @@ pub async fn render_buffer(
     Ok(Response::new(rendered.into_wire()))
 }
 
-/// カーソル位置（UTF-16）での補完（Typst）
 #[tauri::command]
 pub async fn autocomplete(path: String, text: String, offset: usize, explicit: bool) -> Result<render::Completions, String> {
     tauri::async_runtime::spawn_blocking(move || render::complete(&PathBuf::from(path), &text, offset, explicit))
@@ -73,7 +70,6 @@ pub async fn autocomplete(path: String, text: String, offset: usize, explicit: b
         .map_err(|e| e.to_string())?
 }
 
-/// ソースの行・列（1 始まり）に対応する、プレビュー上の位置（前方検索）
 #[tauri::command]
 pub async fn forward_locate(path: String, line: u32, column: u32) -> Result<Option<render::PreviewPosition>, String> {
     tauri::async_runtime::spawn_blocking(move || render::locate_forward(&PathBuf::from(path), line, column))
@@ -88,7 +84,6 @@ pub struct LocatedSource {
     pub column: usize,
 }
 
-/// プレビューの位置に対応するソースの位置。外部のエディタは起動しない（アプリ内のエディタが受け取る）
 #[tauri::command]
 pub async fn locate_source(path: String, page: usize, x: f64, y: f64) -> Result<Option<LocatedSource>, String> {
     tauri::async_runtime::spawn_blocking(move || {
@@ -109,8 +104,6 @@ pub async fn read_text(path: String) -> Result<DiskText, String> {
         .map_err(|e| e.to_string())?
 }
 
-/// 保存する。**このウィンドウが開いているファイルにしか書かない**（画面側が壊れても、任意のファイルは書けない）。
-/// `base_hash` は、読み込んだときのハッシュ。ディスクが変わっていれば `conflict` を返し、`force` のときだけ上書きする
 #[tauri::command]
 pub async fn write_file(
     window: WebviewWindow,
@@ -130,7 +123,6 @@ pub async fn write_file(
     .map_err(|e| e.to_string())?
 }
 
-/// 未保存の変更があるかを、Rust 側にも伝える（⌘Q のときに、確認を出すため）
 #[tauri::command]
 pub fn set_dirty(window: WebviewWindow, dirty_windows: State<DirtyWindows>, dirty: bool) {
     dirty_windows.set(window.label(), dirty);

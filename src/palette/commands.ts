@@ -1,16 +1,11 @@
-/** コマンドパレットに出すコマンド。`id` は、メニューと同じ（`actions.ts` の `menuActions` が処理する）。 */
-
 export interface Context {
-  /** 編集（分割表示）中か */
   editing: boolean;
 }
 
 export interface CommandDef {
   id: string;
   title(ctx: Context): string;
-  /** メニューに出ているのと同じショートカット（見せるだけ） */
   shortcut?: string;
-  /** 編集中にだけ意味があるコマンド */
   editingOnly?: boolean;
 }
 

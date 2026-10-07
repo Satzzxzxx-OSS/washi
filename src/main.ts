@@ -54,7 +54,6 @@ function debounce(fn: () => void, ms: number) {
   };
 }
 
-/** 起動画面の「最近開いたファイル」。開けなかったものは一覧から外す */
 const recentChanged = { current: () => {} };
 
 const host: Host = {
@@ -115,7 +114,6 @@ async function main() {
         nameEl.textContent = name;
         const folderEl = document.createElement("span");
         folderEl.className = "folder";
-        // direction: rtl で長いパスは左側を省くので、記号が動かないよう LRM で囲む
         folderEl.textContent = `\u200e${folder}\u200e`;
         button.append(nameEl, folderEl);
         button.addEventListener("click", () => void open_(path));
@@ -159,7 +157,6 @@ async function main() {
     setDirty,
   });
 
-  /** 別のファイルを開く。編集中なら、先に保存・破棄を確認する（キャンセルなら開かない） */
   const open_ = async (path: string) => {
     if (await editing.release()) await viewer.load(path);
   };
@@ -280,7 +277,6 @@ async function main() {
     const click = pageClick(wrapper, e.clientX, e.clientY);
     if (!click) return;
     e.preventDefault();
-    // 編集中で、開いているファイルのソースなら、エディタのカーソルを動かす
     if (editing.active && (await editing.revealSource(click.page, click.x, click.y))) return;
     try {
       const where = await jumpToSource(path, click.page, click.x, click.y);
@@ -308,7 +304,6 @@ async function main() {
     if (!(await editing.diskChanged())) reloadSoon();
   });
 
-  // 未保存の変更があるウィンドウを閉じる／終了するときは、確認する
   const confirmThenDestroy = async () => {
     if (await editing.confirmDiscardOrSave()) await getCurrentWindow().destroy();
   };
@@ -329,7 +324,6 @@ async function main() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  // 起動中の例外で、画面が白紙のまま何も分からなくならないように
   main().catch((e) => {
     const error = document.getElementById("error");
     if (error) {

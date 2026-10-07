@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-"""Washi（和紙）のアプリアイコン／ロゴを SVG で生成する。標準ライブラリだけで動く。
-
-ちぎり絵（和紙をちぎって貼り重ねた絵）の風景: 朱の日と、重なる藍の山並み。
-ちぎった縁の白い繊維、紙の重なりの影、紙の目は、乱数（--seed）で決まる。同じ引数なら同じ絵になる。
-
-    python3 scripts/make_logo.py --all
-
---all は、同じ絵から次の 3 つを作る。
-    app-icon.svg          1024px。アプリのアイコン一式（pnpm tauri icon app-icon.svg）の元
-    docs/assets/logo.svg  160px。README に Markdown の画像として載せる大きさ
-    docs/favicon.svg      紙の目と繊維を省いた軽い版。ランディングの favicon
-"""
 
 import argparse
 import math
@@ -21,7 +9,7 @@ SIZE = 1024
 
 PAPER = "#f5efe0"
 PAPER_DEEP = "#e7dcc3"
-TORN = "#fbf8f0"  # ちぎった縁に見える、紙の白い繊維
+TORN = "#fbf8f0"
 SUN = "#c9442c"
 SUN_FIBER = "#eaa38f"
 FAR = "#a9b8c7"
@@ -30,7 +18,6 @@ NEAR = "#1e2a45"
 
 
 def wobble(rng, amplitude, harmonics=(2, 3, 5, 7, 11, 17)):
-    """角度（または位置）から揺らぎの大きさを返す、なめらかな 1 次元ノイズ"""
     terms = [(amplitude / k**0.7, k, rng.uniform(0, math.tau)) for k in harmonics]
     return lambda t: sum(a * math.sin(k * t + phase) for a, k, phase in terms)
 
@@ -40,7 +27,6 @@ def polygon(points):
 
 
 def smooth_closed(points):
-    """点列を通る滑らかな閉じた曲線（Catmull-Rom を 3 次ベジェに直したもの）"""
     n = len(points)
     d = f"M{points[0][0]:.1f} {points[0][1]:.1f}"
     for i in range(n):
@@ -52,7 +38,6 @@ def smooth_closed(points):
 
 
 def squircle(cx, cy, half, power, rng, jitter, points=120):
-    """角丸の四角（スーパー楕円）の縁を、外向きに揺らした閉じた曲線"""
     noise = wobble(rng, jitter)
     out = []
     for i in range(points):
@@ -67,9 +52,6 @@ def squircle(cx, cy, half, power, rng, jitter, points=120):
 
 
 def ridge(rng, base, amp, freqs, edge, step=5):
-    """山並みの稜線。尖った峰とまるい谷を重ね、紙をちぎったような細かい乱れを足す。
-
-    返すのは (本体の点列, 縁の白い繊維の点列)。縁は本体より少し上に出る。"""
     phases = [rng.uniform(0, math.tau) for _ in freqs]
     weights = (0.56, 0.30, 0.14)
     slow = wobble(rng, edge * 0.5, harmonics=(3, 5, 9))
@@ -93,7 +75,6 @@ def closed_ridge(points, bottom=SIZE + 80):
 
 
 def disc(rng, cx, cy, radius, jitter, points=96):
-    """ちぎった円。縁を少し乱す"""
     noise = wobble(rng, jitter)
     out = []
     for i in range(points):
@@ -104,7 +85,6 @@ def disc(rng, cx, cy, radius, jitter, points=96):
 
 
 def fibers(rng, count, palette, region, length=(24, 120), angle_sigma=50):
-    """紙の繊維。region=(x0, y0, x1, y1) の中に、向きと濃さをばらして散らす"""
     x0, y0, x1, y1 = region
     parts = []
     for _ in range(count):
@@ -169,7 +149,6 @@ def build(seed, shown, detail=True):
             '<feColorMatrix type="matrix" values="0 0 0 0 0.30  0 0 0 0 0.22  0 0 0 0 0.12  0 0 0 0.20 -0.02"/></filter>'
         )
 
-    # 台紙
     art.append(f'<path d="{sheet}" fill="{PAPER}" filter="url(#lift)"/>')
     art.append('<g clip-path="url(#sheet)">')
     art.append(f'<rect width="{SIZE}" height="{SIZE}" fill="url(#vignette)"/>')
@@ -180,7 +159,6 @@ def build(seed, shown, detail=True):
             + "</g>"
         )
 
-    # 日
     defs.append(f'<clipPath id="sun"><path d="{sun_body}"/></clipPath>')
     art.append(f'<g filter="url(#sunshadow)"><path d="{sun_edge}" fill="{TORN}"/></g>')
     art.append(f'<path d="{sun_body}" fill="{SUN}"/>')
@@ -191,7 +169,6 @@ def build(seed, shown, detail=True):
             + "</g>"
         )
 
-    # 山並み（遠い順に貼り重ねる）。中と近の前に、谷から立つ靄を入れる
     for index, (name, body, fringe, color, fiber_palette) in enumerate(layers):
         if index == 1:
             art.append(f'<rect x="0" y="470" width="{SIZE}" height="260" fill="url(#mist)"/>')

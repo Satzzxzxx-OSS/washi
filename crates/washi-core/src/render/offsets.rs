@@ -1,7 +1,3 @@
-//! エディタ（CodeMirror）の位置は UTF-16 の単位、Typst はバイト、診断の列は Unicode のコードポイント。
-//! 日本語（BMP）は 1 単位、絵文字などは UTF-16 で 2 単位・UTF-8 で 4 バイトなので、変換を 1 か所に置く。
-
-/// UTF-16 の位置を、UTF-8 のバイト位置にする。コードポイントの途中（サロゲートペアの間）を指していれば `None`
 pub fn utf16_to_byte(text: &str, utf16: usize) -> Option<usize> {
     let mut units = 0;
     for (byte, c) in text.char_indices() {
@@ -16,7 +12,6 @@ pub fn utf16_to_byte(text: &str, utf16: usize) -> Option<usize> {
     (units == utf16).then_some(text.len())
 }
 
-/// UTF-8 のバイト位置を、UTF-16 の位置にする。文字の途中のバイトなら、その文字の手前に丸める
 pub fn byte_to_utf16(text: &str, byte: usize) -> usize {
     let mut end = byte.min(text.len());
     while !text.is_char_boundary(end) {
@@ -25,7 +20,6 @@ pub fn byte_to_utf16(text: &str, byte: usize) -> usize {
     text[..end].encode_utf16().count()
 }
 
-/// UTF-8 のバイト位置を、(1 始まりの行, 1 始まりのコードポイント列) にする
 pub fn byte_to_line_column(text: &str, byte: usize) -> (u32, u32) {
     let mut end = byte.min(text.len());
     while !text.is_char_boundary(end) {

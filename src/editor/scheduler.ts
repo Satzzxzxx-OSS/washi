@@ -1,5 +1,3 @@
-/** プレビューの描画の間引き。常に 1 つだけ実行し、実行中に来た要求は、最新のものを 1 つだけ待たせる。 */
-
 export interface Timers {
   now(): number;
   set(fn: () => void, ms: number): unknown;
@@ -13,10 +11,6 @@ const realTimers: Timers = {
 };
 
 export interface SchedulerOptions {
-  /**
-   * `throttle`: 最初の要求はすぐ実行し、続く要求は `delay` ごとに 1 回（最後の要求は必ず実行）。
-   * `debounce`: 要求が `delay` の間途切れたら実行（重いもの向け）。
-   */
   strategy: "throttle" | "debounce";
   delay: number;
   run(): Promise<unknown>;
@@ -60,7 +54,6 @@ export class Scheduler {
     }
   }
 
-  /** 待たずに、いますぐ実行する（⌘S のとき） */
   flush() {
     this.clearTimer();
     this.pending = false;

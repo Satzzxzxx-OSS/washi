@@ -3,7 +3,6 @@ import type { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
-/** アプリの CSS 変数（`--paper`、`--ink`、`--hl-*` など）に追従する。ライト・ダークの切り替えも、変数が担う */
 const view = EditorView.theme({
   "&": {
     height: "100%",
@@ -82,7 +81,6 @@ const view = EditorView.theme({
   ".cm-lintRange-warning": { backgroundImage: "none", textDecoration: "underline wavy var(--hl-number)" },
 });
 
-/** Markdown と LaTeX で共通に使う、標準のタグへの色（Typst は `languages.ts` で自分の色を足す） */
 const highlight = HighlightStyle.define([
   { tag: tags.heading, color: "var(--hl-title)", fontWeight: "700" },
   { tag: tags.strong, fontWeight: "700" },

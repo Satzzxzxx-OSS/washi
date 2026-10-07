@@ -2,10 +2,6 @@ import { StreamLanguage, type StreamParser } from "@codemirror/language";
 import type { Extension } from "@codemirror/state";
 import type { Kind } from "./kinds";
 
-/**
- * 種類ごとの言語対応。重いので、使うときに読み込む（Typst は特に）。
- * Typst は `codemirror-lang-typst`（実験的な小さなパッケージ）の部品で組み立て、読み込めなければ簡易のものに落とす。
- */
 export async function languageFor(kind: Kind): Promise<Extension> {
   switch (kind) {
     case "markdown": {
@@ -27,10 +23,6 @@ export async function languageFor(kind: Kind): Promise<Extension> {
   }
 }
 
-/**
- * `typst_lezer()` と同じ部品から、**構文エラーの検査（linter）だけを除いて**組み立てる。
- * 波線は、コンパイラの診断（`lint.ts`）に一本化するため。ハイライトの色は、アプリのテーマの変数に合わせる。
- */
 async function typstSupport(): Promise<Extension> {
   const [language, lezer] = await Promise.all([import("@codemirror/language"), import("codemirror-lang-typst/lezer")]);
   const { Language, LanguageSupport, languageDataProp, HighlightStyle, syntaxHighlighting } = language;
@@ -65,7 +57,6 @@ async function typstSupport(): Promise<Extension> {
   ]);
 }
 
-/** パッケージが読み込めないときの、簡易の Typst のハイライト（見出し、コメント、文字列、`#関数`、数式、数） */
 export const typstFallback: StreamParser<{ math: boolean }> = {
   startState: () => ({ math: false }),
   token(stream, state) {

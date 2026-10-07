@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Scheduler, type Timers } from "./scheduler";
 
-/** 時計と timer を、テストが動かす */
 class FakeClock implements Timers {
   time = 1000;
   private next = 1;

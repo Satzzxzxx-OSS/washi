@@ -130,7 +130,6 @@
         color: var(--muted);
       }
 
-      /* grain */
       body::before {
         content: "";
         position: fixed;
@@ -152,7 +151,6 @@
         }
       }
 
-      /* nav */
       .nav {
         position: sticky;
         top: 0;
@@ -224,7 +222,6 @@
         }
       }
 
-      /* small screens: keep the header on one line, keep table row labels visible while scrolling */
       .hero h1 .word {
         display: inline-block;
         white-space: nowrap;
@@ -273,7 +270,6 @@
         }
       }
 
-      /* buttons */
       .btn {
         display: inline-flex;
         align-items: center;
@@ -295,7 +291,6 @@
         background: transparent;
       }
 
-      /* hero */
       .hero {
         position: relative;
         padding: clamp(56px, 9vw, 120px) 0 clamp(40px, 6vw, 80px);
@@ -393,7 +388,6 @@
         font: 400 0.78rem/1 var(--mono);
       }
 
-      /* marquee */
       .marquee {
         overflow: hidden;
         border-block: 1px solid var(--rule);
@@ -421,7 +415,6 @@
         margin-bottom: clamp(32px, 5vw, 56px);
       }
 
-      /* bento */
       .bento {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
@@ -486,7 +479,6 @@
         }
       }
 
-      /* showcase */
       .tabs {
         display: flex;
         flex-wrap: wrap;
@@ -524,7 +516,6 @@
         font-size: 0.92rem;
       }
 
-      /* pipeline */
       .pipeline {
         display: grid;
         grid-template-columns: 1fr 1.1fr;
@@ -577,7 +568,6 @@
         }
       }
 
-      /* stats */
       .stats {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -610,7 +600,6 @@
         }
       }
 
-      /* table */
       .table-wrap {
         overflow-x: auto;
         border: 1px solid var(--rule);
@@ -667,7 +656,6 @@
         font-size: 0.85rem;
       }
 
-      /* install */
       .code {
         position: relative;
         overflow: hidden;
@@ -1136,7 +1124,6 @@
                     into.append(s);
                   });
                 if (/\s/.test(n.textContent)) {
-                  // Text with spaces (e.g. English): wrap each word so it never breaks mid-word, and keep the real spaces.
                   n.textContent.split(/(\s+)/).forEach((token) => {
                     if (!token) return;
                     if (/^\s+$/.test(token)) return frag.append(document.createTextNode(" "));
@@ -1146,7 +1133,6 @@
                     frag.append(word);
                   });
                 } else {
-                  // Text without spaces (e.g. Japanese): break only after a clause that ends in punctuation.
                   let clause = null;
                   [...n.textContent].forEach((c) => {
                     if (!clause) {

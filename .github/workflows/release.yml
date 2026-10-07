@@ -1,12 +1,5 @@
 name: Release
 
-# When a GitHub Release is published, build the .app for its tag, attach it to the release, and update the Cask in the Homebrew tap.
-#   gh release create v0.1.0 --title "Washi 0.1.0" --generate-notes
-# The tag must be v<major>.<minor>.<patch> and match the versions in package.json, tauri.conf.json and src-tauri/Cargo.toml.
-# If it fails, delete the release and the tag, fix the problem and cut the release again (or re-run by hand from the Actions tab with a tag).
-# The tap update needs the repository secret HOMEBREW_TAP_TOKEN
-#   (a fine-grained PAT with contents:write on kiwamizamurai/homebrew-tap). Without it, only the tap update is skipped, with a warning.
-
 on:
   release:
     types: [published]
@@ -26,7 +19,7 @@ env:
 
 jobs:
   release:
-    runs-on: macos-15 # Apple Silicon
+    runs-on: macos-15
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
@@ -36,7 +29,6 @@ jobs:
 
       - name: Check that the tag matches the versions
         run: |
-          # The tag reaches the shell, so check its shape first
           [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "The tag is not in the form v<major>.<minor>.<patch>: $TAG"; exit 1; }
           version="${TAG#v}"
           package=$(node -p "require('./package.json').version")
@@ -59,7 +51,6 @@ jobs:
       - run: pnpm test
       - run: cargo test --workspace
 
-      # Build the .app without embedding local paths (scripts/release.sh)
       - run: pnpm release
 
       - name: Make the zip and its sha256
@@ -101,15 +92,12 @@ jobs:
             homepage "https://github.com/kiwamizamurai/washi"
 
             depends_on arch: :arm64
-            # Renders LaTeX (latexmk is used instead when it is on the PATH)
             depends_on formula: "tectonic"
             depends_on :macos
 
             app "Washi.app"
-            # Puts the washi command on the PATH (usable from a terminal or an AI agent)
             binary "#{appdir}/Washi.app/Contents/MacOS/washi"
 
-            # Unsigned (ad-hoc): drop the quarantine attribute Homebrew adds, to avoid the first-launch warning
             postflight_steps do
               run "/usr/bin/xattr",
                   args:           ["-dr", "com.apple.quarantine", "{{appdir}}/Washi.app"],

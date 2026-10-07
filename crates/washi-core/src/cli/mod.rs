@@ -1,5 +1,3 @@
-//! `washi` コマンド。起動を待たずに戻り、`--json` の出力は `report` の型で決まる契約として扱う。
-
 mod parse;
 mod report;
 #[cfg(test)]
@@ -176,7 +174,6 @@ fn print_json(env: &mut Env, report: &impl serde::Serialize) -> i32 {
     print(env, &text)
 }
 
-/// 失敗を stderr に出し、終了コードを返す。`--json` なら JSON を 1 行、そうでなければ 1 件 1 行の文
 fn fail(err: &mut dyn Write, json: bool, errors: Vec<CliError>) -> i32 {
     if json {
         let report = ErrorReport { format_version: FORMAT_VERSION, errors: &errors };

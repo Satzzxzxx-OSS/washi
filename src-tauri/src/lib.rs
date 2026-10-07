@@ -66,7 +66,6 @@ pub fn run() {
             let paths = urls.iter().filter_map(|u| u.to_file_path().ok());
             launch::open_documents(handle, launch::openable_paths(paths));
         }
-        // ⌘Q など: 未保存のウィンドウがあれば、終了を止めて、そのウィンドウに確認させる
         if let tauri::RunEvent::ExitRequested { api, code: None, .. } = &event {
             let dirty = handle.state::<DirtyWindows>().labels();
             if !dirty.is_empty() {
@@ -84,7 +83,6 @@ pub fn run() {
 mod tests {
     use std::collections::BTreeSet;
 
-    // Finder に登録する拡張子（tauri.conf.json）が、描画できる拡張子とずれないようにする
     #[test]
     fn file_associations_cover_every_supported_extension() {
         let conf: serde_json::Value =

@@ -22,7 +22,6 @@ describe("rank", () => {
   });
 
   it("filters across commands, files and headings", () => {
-    // 先頭から合うものが先
     expect(titles("out")).toEqual(["Outline of the plan", "Toggle Outline"]);
   });
 

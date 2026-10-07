@@ -9,7 +9,6 @@ use tauri::{AppHandle, Emitter};
 
 pub const CHANGED_EVENT: &str = "washi://changed";
 
-/// 1 つのウィンドウが監視しているフォルダ。文書のあるフォルダに加えて、文書が読み込むファイル（章・参考文献・画像など）のフォルダも見る
 struct Watching {
     watcher: RecommendedWatcher,
     base: PathBuf,
@@ -22,7 +21,6 @@ impl Watching {
         Ok(Self { watcher, base: base.to_path_buf(), dirs: HashSet::from([base.to_path_buf()]) })
     }
 
-    /// 監視先を「文書のフォルダ＋`extra`」に合わせる（増えた分は監視し、減った分はやめる）
     fn sync(&mut self, extra: &[PathBuf]) {
         let wanted: HashSet<PathBuf> = std::iter::once(self.base.clone()).chain(extra.iter().cloned()).collect();
         for gone in self.dirs.difference(&wanted).cloned().collect::<Vec<_>>() {
@@ -30,7 +28,6 @@ impl Watching {
             self.dirs.remove(&gone);
         }
         for added in wanted.difference(&self.dirs.clone()) {
-            // 消えたフォルダなどは黙って飛ばす。文書自体の保存は base で拾える
             if self.watcher.watch(added, RecursiveMode::NonRecursive).is_ok() {
                 self.dirs.insert(added.clone());
             }
@@ -52,7 +49,6 @@ impl FileWatcher {
         Ok(())
     }
 
-    /// 描画のたびに呼ぶ。文書が読み込むファイルのフォルダを、監視先に加える
     pub fn set_dependencies(&self, label: &str, dirs: &[PathBuf]) {
         if let Some(watching) = self.0.lock().unwrap().get_mut(label) {
             watching.sync(dirs);
@@ -100,8 +96,6 @@ mod tests {
 
     use std::{fs, sync::mpsc, time::Duration};
 
-    /// FSEvents は、ウォッチャーを起動する直前に書いたファイルのイベントを遅れて届けることがある。
-    /// 「イベントが来ない」ことを確かめるテストが揺らがないよう、静かになるまで待つ
     fn settle(rx: &mpsc::Receiver<()>) {
         while rx.recv_timeout(Duration::from_millis(600)).is_ok() {}
     }
@@ -196,9 +190,7 @@ mod tests {
         watching.sync(&[dir.join("chapters")]);
         assert_eq!(watching.dirs, HashSet::from([dir.clone(), dir.join("chapters")]));
         watching.sync(&[]);
-        // 監視先の集合で確かめる。「イベントが来ない」ことの確認は、OS の通知の遅れで揺らぐ
         assert_eq!(watching.dirs, HashSet::from([dir.clone()]));
-        // 文書のあるフォルダは、いつでも監視している
         std::thread::sleep(Duration::from_millis(300));
         settle(&rx);
         fs::write(dir.join("main.tex"), "y").unwrap();

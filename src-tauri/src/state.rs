@@ -20,7 +20,6 @@ impl PendingFiles {
     }
 }
 
-/// 未保存の変更があるウィンドウ。⌘Q で、確認を出す相手を知るために使う
 #[derive(Default)]
 pub struct DirtyWindows(Mutex<BTreeSet<String>>);
 
@@ -55,14 +54,12 @@ impl Documents {
         self.0.lock().unwrap().contains_key(label)
     }
 
-    /// このウィンドウが開いているファイルが `path` か。保存先として許すのは、これだけ
     pub fn owns(&self, label: &str, path: &str) -> bool {
         let registered = self.0.lock().unwrap().get(label).cloned();
         let Some(registered) = registered else { return false };
         if registered == path {
             return true;
         }
-        // 相対パスやシンボリックリンクの違いは、実体で比べる
         match (std::fs::canonicalize(&registered), std::fs::canonicalize(path)) {
             (Ok(a), Ok(b)) => a == b,
             _ => false,
@@ -119,7 +116,6 @@ mod tests {
         assert!(!docs.owns("main", b.to_str().unwrap()), "別のファイルには書かせない");
         assert!(!docs.owns("other", a.to_str().unwrap()), "開いていないウィンドウには書かせない");
         assert!(!docs.owns("main", "/etc/hosts"));
-        // 同じファイルを、`.` を含むパスで指しても、同じファイルとして扱う
         let dotted = format!("{}/./a.md", dir.display());
         assert!(docs.owns("main", &dotted));
     }

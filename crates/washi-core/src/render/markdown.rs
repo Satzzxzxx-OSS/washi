@@ -36,7 +36,6 @@ impl Renderer for MarkdownRenderer {
     }
 
     fn render_buffer(&self, path: &Path, text: &str) -> Rendered {
-        // 位置合わせのために、要素に data-sourcepos（行:列-行:列）を付ける。読むモードの出力は変えない
         let output = to_html_with(text, Some(path.parent().unwrap_or(Path::new("."))), true).map(Output::Html);
         Rendered { output, diagnostics: Vec::new() }
     }

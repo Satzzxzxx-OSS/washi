@@ -17,15 +17,11 @@ import { columnToOffset, toCmDiagnostics } from "./lint";
 import { countChars } from "./status";
 import { washiTheme } from "./theme";
 
-/** プログラムが本文を置き換えたとき（ディスクの内容の取り込み）は、`onChange` を呼ばない */
 const FromOutside = Annotation.define<boolean>();
 
 export interface CursorPosition {
-  /** 1 始まり */
   line: number;
-  /** 1 始まり、コードポイントの数 */
   column: number;
-  /** 選択している文字数（コードポイント）。選択が無ければ 0 */
   selected: number;
 }
 
@@ -33,7 +29,6 @@ export interface EditorOptions {
   doc: string;
   language: Extension;
   extra?: Extension[];
-  /** 前に使っていた状態（元に戻す履歴ごと）で作り直す。あれば `doc` / `language` / `extra` は使わない */
   restore?: EditorState;
   onChange(text: string): void;
   onCursor?(position: CursorPosition): void;
@@ -51,7 +46,6 @@ export interface EditorHandle {
   cursor(): CursorPosition;
   goTo(line: number, column: number): void;
   setDiagnostics(list: readonly Diagnostic[]): void;
-  /** `extra` に渡す補完など、本文の「いまの位置」を知りたいもの向け */
   state(): EditorState;
   destroy(): void;
 }
@@ -101,7 +95,6 @@ export function createEditor(parent: HTMLElement, options: EditorOptions): Edito
       ],
     });
   const view = new EditorView({ parent, state });
-  // 戻ってきたときは、前にいた位置が見えるようにする
   if (options.restore) view.dispatch({ effects: EditorView.scrollIntoView(state.selection.main.head, { y: "center" }) });
 
   return {

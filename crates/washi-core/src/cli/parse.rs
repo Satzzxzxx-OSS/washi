@@ -18,13 +18,11 @@ pub enum Command {
     Open { targets: Vec<Target>, json: bool, launch: bool },
 }
 
-/// 引数に `--json` があるか（`--` より後ろは見ない）。使い方の誤りでも、`--json` なら失敗を JSON で返すために使う
 pub fn wants_json(args: &[String]) -> bool {
     args.iter().take_while(|a| a.as_str() != "--").any(|a| a == "--json")
 }
 
 pub fn parse(args: &[String]) -> Result<Command, CliError> {
-    // 引数なしは、Finder がアプリを起動するときと同じ。フォアグラウンドでアプリを動かす
     let Some(first) = args.first().map(String::as_str) else {
         return Ok(Command::Gui);
     };

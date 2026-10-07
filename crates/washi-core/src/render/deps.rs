@@ -1,7 +1,3 @@
-//! 文書が読み込む他のファイル（章・参考文献・画像など）のあるフォルダを、ソースから調べる。
-//! 保存を監視するフォルダを増やすために使う。エンジンが実際に読んだ一覧ではなく、ソースの静的な走査なので、
-//! マクロで組み立てたパスは拾えない。
-
 use std::{
     collections::HashSet,
     fs,
@@ -12,10 +8,8 @@ use std::{
 use comrak::{nodes::NodeValue, parse_document, Arena};
 use regex::Regex;
 
-/// たどるファイル数の上限（循環した include や巨大な文書で止まらなくなるのを防ぐ）
 const MAX_FILES: usize = 64;
 
-/// 見つかった依存のフォルダ（存在するものだけ、重複なし）。ルートや HOME のような広すぎるフォルダは除く。
 fn directories(paths: impl IntoIterator<Item = PathBuf>) -> Vec<PathBuf> {
     let home = std::env::var_os("HOME").map(PathBuf::from);
     let mut seen = HashSet::new();
@@ -31,7 +25,6 @@ fn directories(paths: impl IntoIterator<Item = PathBuf>) -> Vec<PathBuf> {
     out
 }
 
-/// `.` と `..` を字句的にたたむ（シンボリックリンクは解決しない）
 fn normalize(path: &Path) -> PathBuf {
     let mut out = PathBuf::new();
     for part in path.components() {
@@ -52,8 +45,6 @@ fn is_remote(target: &str) -> bool {
     target.contains("://") || target.starts_with("data:") || target.starts_with("mailto:")
 }
 
-// ---- Markdown ----
-
 pub fn markdown(source: &str, base: &Path) -> Vec<PathBuf> {
     let arena = Arena::new();
     let root = parse_document(&arena, source, &comrak::Options::default());
@@ -71,8 +62,6 @@ pub fn markdown(source: &str, base: &Path) -> Vec<PathBuf> {
     }
     directories(dirs)
 }
-
-// ---- LaTeX ----
 
 static TEX_COMMAND: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -102,7 +91,6 @@ fn strip_tex_comments(source: &str) -> String {
         .join("\n")
 }
 
-/// 主ファイルで、保存前の本文があればそれを、そうでなければディスクのファイルを読む
 fn read_source(file: &Path, main: &Path, main_text: Option<&str>) -> Option<String> {
     match main_text {
         Some(text) if file == main => Some(text.to_owned()),
@@ -119,7 +107,6 @@ fn rooted(root: &Path, target: &str) -> PathBuf {
     }
 }
 
-/// `\input{chapters/intro}` のように拡張子が無ければ `.tex` を補う
 fn tex_file(root: &Path, target: &str) -> PathBuf {
     let path = rooted(root, target);
     if path.extension().is_some_and(|e| e == "tex") {
@@ -135,9 +122,7 @@ pub fn latex(main: &Path) -> Vec<PathBuf> {
     latex_text(main, None)
 }
 
-/// `main_text` は、保存前の本文。あれば、ディスクの主ファイルの代わりに走査する
 pub fn latex_text(main: &Path, main_text: Option<&str>) -> Vec<PathBuf> {
-    // TeX は読み込み先を、最初に開いた文書のあるフォルダを基準に解決する
     let root = main.parent().unwrap_or(Path::new("."));
     let mut dirs = Vec::new();
     let mut visited = HashSet::new();
@@ -159,7 +144,6 @@ pub fn latex_text(main: &Path, main_text: Option<&str>) -> Vec<PathBuf> {
                         dirs.extend(path.parent().map(Path::to_path_buf));
                         queue.push(path);
                     }
-                    // 自作のスタイルやクラスは、同じフォルダにあるときだけ関係する
                     "usepackage" | "RequirePackage" | "documentclass" => {
                         for ext in ["sty", "cls"] {
                             let path = rooted(root, &format!("{name}.{ext}"));
@@ -181,8 +165,6 @@ pub fn latex_text(main: &Path, main_text: Option<&str>) -> Vec<PathBuf> {
     directories(dirs)
 }
 
-// ---- Typst ----
-
 static TYPST_PATH: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r#"\b(include|import|image|bibliography|read|csv|json|yaml|toml|xml|cbor|pdf)\s*\(?\s*(?:\w+\s*:\s*)?"([^"]+)""#,
@@ -194,10 +176,7 @@ pub fn typst(main: &Path) -> Vec<PathBuf> {
     typst_text(main, None)
 }
 
-/// `main_text` は、保存前の本文。あれば、ディスクの主ファイルの代わりに走査する
 pub fn typst_text(main: &Path, main_text: Option<&str>) -> Vec<PathBuf> {
-    // Typst は `/` から始まるパスをプロジェクトのルート（開いた文書のフォルダ）から、
-    // それ以外を読み込んでいるファイルのフォルダから解決する
     let root = main.parent().unwrap_or(Path::new("."));
     let mut dirs = Vec::new();
     let mut visited = HashSet::new();

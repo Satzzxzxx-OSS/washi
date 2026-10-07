@@ -32,7 +32,6 @@ impl Output {
     }
 }
 
-/// 診断（エラーと警告）の重大度
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Severity {
@@ -40,10 +39,8 @@ pub enum Severity {
     Warning,
 }
 
-/// 編集中の本文に対する診断。行と列は 1 始まりで、列は Unicode のコードポイントの数
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct Diagnostic {
-    /// `None` は、描画した本文そのもの。ほかのファイル（`#include` 先など）なら、プロジェクトの根からの相対パス
     pub file: Option<String>,
     pub line: u32,
     pub column: u32,
@@ -54,15 +51,12 @@ pub struct Diagnostic {
     pub hints: Vec<String>,
 }
 
-/// 保存前の本文の描画結果。失敗しても診断は返す（画面側は、直前の良いプレビューを残して波線だけ更新する）
 pub struct Rendered {
     pub output: Result<Output, String>,
     pub diagnostics: Vec<Diagnostic>,
 }
 
 impl Rendered {
-    /// 画面に渡す形式: `[tag: u8][診断 JSON の長さ: u32 ビッグエンディアン][診断 JSON][本体]`。
-    /// `tag` は 0=HTML、1=PDF、2=失敗（本体は UTF-8 のメッセージ。画面は直前の良いプレビューを残す）
     pub fn into_wire(self) -> Vec<u8> {
         let diagnostics = serde_json::to_vec(&self.diagnostics).unwrap_or_else(|_| b"[]".to_vec());
         let (tag, body) = match self.output {
@@ -79,7 +73,6 @@ impl Rendered {
     }
 }
 
-/// プレビュー上の位置（PDF のポイント、ページは 1 始まり）
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize)]
 pub struct PreviewPosition {
     pub page: u32,
@@ -90,14 +83,11 @@ pub struct PreviewPosition {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct CompletionItem {
     pub label: String,
-    /// 補完で入れる文字列（スニペットの記法を含むことがある）。無ければ `label`
     pub apply: Option<String>,
     pub detail: Option<String>,
-    /// `syntax` / `func` / `type` / `param` / `constant` / `path` / `package` / `label` / `font` / `symbol`
     pub kind: String,
 }
 
-/// 補完の候補。`offset` は、置き換える範囲の始まり（UTF-16、エディタの位置）
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct Completions {
     pub offset: usize,
@@ -112,7 +102,6 @@ pub struct SourceLocation {
 }
 
 pub trait Renderer: Sync {
-    /// 形式の名前（`washi --json` の `format` に出る。変えると契約が変わる）
     fn name(&self) -> &'static str;
     fn extensions(&self) -> &'static [&'static str];
     fn render(&self, path: &Path) -> Result<Output, String>;
@@ -125,28 +114,22 @@ pub trait Renderer: Sync {
         Ok(None)
     }
 
-    /// この文書が読み込むファイルのあるフォルダ（章、参考文献、画像など）。保存の監視先を増やすのに使う
     fn dependency_dirs(&self, _path: &Path) -> Vec<PathBuf> {
         Vec::new()
     }
 
-    /// `path` に属する、まだ保存していない本文 `text` を描画する。相対パス（画像、`#include`、`\input` など）は
-    /// `path` のあるフォルダから解決する。既定は、文脈を持たない `render_text`
     fn render_buffer(&self, _path: &Path, text: &str) -> Rendered {
         Rendered { output: self.render_text(text), diagnostics: Vec::new() }
     }
 
-    /// 保存前の本文に対する `dependency_dirs`
     fn buffer_dependency_dirs(&self, path: &Path, _text: &str) -> Vec<PathBuf> {
         self.dependency_dirs(path)
     }
 
-    /// ソースの行・列（1 始まり）から、プレビュー上の位置を探す（前方検索）。直前の `render_buffer` / `render` が前提
     fn locate_forward(&self, _path: &Path, _line: u32, _column: u32) -> Result<Option<PreviewPosition>, String> {
         Ok(None)
     }
 
-    /// カーソル位置（UTF-16）での補完。対応しない形式は空
     fn complete(&self, _path: &Path, _text: &str, _offset: usize, _explicit: bool) -> Result<Completions, String> {
         Ok(Completions { offset: _offset, items: Vec::new() })
     }
@@ -168,12 +151,10 @@ pub fn renderer_for(path: &Path) -> Option<&'static dyn Renderer> {
         .copied()
 }
 
-/// 拡張子から、何として描画されるか（`markdown` / `mermaid` / `typst` / `latex` / `pdf`）
 pub fn format_of(path: &Path) -> Option<&'static str> {
     renderer_for(path).map(|r| r.name())
 }
 
-/// 形式ごとの（名前、拡張子）
 pub fn formats() -> Vec<(&'static str, &'static [&'static str])> {
     RENDERERS.iter().map(|r| (r.name(), r.extensions())).collect()
 }
@@ -197,12 +178,10 @@ pub fn locate(path: &Path, page: usize, x: f64, y: f64) -> Result<Option<SourceL
         .locate(path, page, x, y)
 }
 
-/// 文書の保存に加えて監視したいフォルダ。対応しない形式や、読めないファイルでは空
 pub fn dependency_dirs(path: &Path) -> Vec<PathBuf> {
     renderer_for(path).map(|r| r.dependency_dirs(path)).unwrap_or_default()
 }
 
-/// 保存前の本文を描画する。対応しない形式は、診断なしの失敗
 pub fn render_buffer(path: &Path, text: &str) -> Rendered {
     match renderer_for(path) {
         Some(renderer) => renderer.render_buffer(path, text),
@@ -213,7 +192,6 @@ pub fn render_buffer(path: &Path, text: &str) -> Rendered {
     }
 }
 
-/// 保存前の本文が読み込むファイルのあるフォルダ
 pub fn buffer_dependency_dirs(path: &Path, text: &str) -> Vec<PathBuf> {
     renderer_for(path).map(|r| r.buffer_dependency_dirs(path, text)).unwrap_or_default()
 }
@@ -296,8 +274,6 @@ mod examples {
     use std::path::PathBuf;
     use std::sync::{Mutex, MutexGuard};
 
-    // 同じ文書の描画は新しい方が古い方を打ち切る（アプリでは 1 文書 1 ウィンドウ）。
-    // 同じ例を並列で描画するテストがぶつからないよう、外部エンジンを使う描画は直列にする
     static SERIAL: Mutex<()> = Mutex::new(());
 
     fn serial() -> MutexGuard<'static, ()> {

@@ -1,15 +1,10 @@
-/** あいまい検索。DOM に依存しない。 */
-
 export interface Match {
-  /** 大きいほど、よく合っている */
   score: number;
-  /** 一致した文字の位置（強調表示に使う） */
   indices: number[];
 }
 
 const isWordStart = (text: string, i: number) => i === 0 || !/[\p{L}\p{N}]/u.test(text[i - 1]);
 
-/** 空白で区切った語を、すべて含むものだけに合う（順不同）。一致しなければ `null` */
 export function fuzzyMatch(query: string, text: string): Match | null {
   const terms = query.trim().split(/\s+/).filter(Boolean);
   if (terms.length === 0) return { score: 0, indices: [] };
@@ -36,7 +31,6 @@ function matchTerm(term: string, text: string): Match | null {
   return subsequence(term, text);
 }
 
-/** 語の頭から始まる位置を優先して、最初に現れる位置を返す */
 function bestSubstring(term: string, text: string): number | null {
   let first: number | null = null;
   for (let at = text.indexOf(term); at !== -1; at = text.indexOf(term, at + 1)) {
@@ -46,7 +40,6 @@ function bestSubstring(term: string, text: string): number | null {
   return first;
 }
 
-/** 文字が順に現れればよい（飛び飛びでもよい）一致。連続や語の頭を高く評価する */
 function subsequence(term: string, text: string): Match | null {
   const indices: number[] = [];
   let score = 0;
@@ -54,7 +47,6 @@ function subsequence(term: string, text: string): Match | null {
   for (const ch of term) {
     let at = text.indexOf(ch, from);
     if (at === -1) return null;
-    // 近くに語の頭があれば、そちらを使う
     for (let j = at; j < Math.min(text.length, at + 8); j++) {
       if (text[j] === ch && isWordStart(text, j)) {
         at = j;

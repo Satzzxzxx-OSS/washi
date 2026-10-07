@@ -8,7 +8,6 @@ export default defineConfig(() => ({
   build: {
     rollupOptions: {
       output: {
-        // エディタ（CodeMirror）は ⌘E で初めて読む。起動時のチャンクに混ぜない
         manualChunks: (id: string) =>
           /node_modules\/(@codemirror|@lezer|codemirror-lang-typst|crelt|style-mod|w3c-keyname)\//.test(id)
             ? "vendor-cm"
