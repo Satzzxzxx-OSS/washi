@@ -19,6 +19,7 @@ The `washi` command-line interface (the `--json` output, exit codes, and the std
 - A thin reading-progress line along the top edge of the preview.
 - Find shows the number of matches and your position ("3 / 12"; "12+" in a PDF whose far pages are not drawn yet). Stepping with `Enter` / `⇧Enter` now selects only matches in the document, so it no longer stops in the find bar or the editor.
 - Recent files on the start screen (up to eight; files that cannot be opened are dropped; "Clear recent files").
+- A command palette (`⌘K`): type to run any menu command, reopen a recent file, or type `#` to jump to a heading.
 - Menu: File → Save and Toggle autosave, Edit → Undo, Redo and Cut, View → Edit (split view).
 - Tauri commands for the editor: `render_buffer`, `autocomplete`, `forward_locate`, `locate_source`, `read_text`, `write_file`, `set_dirty`.
 

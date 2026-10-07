@@ -28,6 +28,7 @@ pub mod id {
     pub const REDO: &str = "redo";
     pub const AUTOSAVE: &str = "autosave";
     pub const SYNC_CURSOR: &str = "sync-cursor";
+    pub const PALETTE: &str = "palette";
 }
 
 fn item(app: &AppHandle, id: &str, label: &str, accelerator: Option<&str>) -> tauri::Result<MenuItem<Wry>> {
@@ -105,6 +106,8 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .build()?;
 
     let view = SubmenuBuilder::new(app, "View")
+        .item(&item(app, id::PALETTE, "Command Palette…", Some("CmdOrCtrl+K"))?)
+        .separator()
         .item(&item(app, id::EDIT, "Edit (Split View)", Some("CmdOrCtrl+E"))?)
         .item(&item(app, id::SYNC_CURSOR, "Show Cursor Line in Preview", None)?)
         .separator()
@@ -151,7 +154,7 @@ mod tests {
         let all = [
             OPEN, RELOAD, PRINT, PASTE, FIND, OUTLINE, THEME_SYSTEM, THEME_LIGHT, THEME_DARK,
             WIDTH_NARROW, WIDTH_WIDE, WIDTH_FULL, ZOOM_IN, ZOOM_OUT, ZOOM_RESET, SAVE, EDIT, UNDO, REDO,
-            AUTOSAVE, SYNC_CURSOR,
+            AUTOSAVE, SYNC_CURSOR, PALETTE,
         ];
         let mut sorted = all.to_vec();
         sorted.sort_unstable();

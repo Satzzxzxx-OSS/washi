@@ -21,6 +21,7 @@ function controls() {
     redo: log("redo"),
     toggleAutosave: log("autosave"),
     toggleSyncCursor: log("sync-cursor"),
+    openPalette: log("palette"),
   };
   return { calls, actions: menuActions(c) };
 }

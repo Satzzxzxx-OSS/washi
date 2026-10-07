@@ -17,6 +17,7 @@ export interface Controls {
   redo(): unknown;
   toggleAutosave(): unknown;
   toggleSyncCursor(): unknown;
+  openPalette(): unknown;
 }
 
 export function menuActions(c: Controls): Record<string, () => unknown> {
@@ -42,5 +43,6 @@ export function menuActions(c: Controls): Record<string, () => unknown> {
     redo: () => c.redo(),
     autosave: () => c.toggleAutosave(),
     "sync-cursor": () => c.toggleSyncCursor(),
+    palette: () => c.openPalette(),
   };
 }

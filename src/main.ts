@@ -22,6 +22,9 @@ import { EditingController } from "./editor/controller";
 import { FindBar } from "./find";
 import { hasJumpableSource, pageClick } from "./jump";
 import { OutlinePanel } from "./outline";
+import { availableCommands } from "./palette/commands";
+import type { Item } from "./palette/items";
+import { CommandPalette } from "./palette/palette";
 import { ReadingProgress } from "./progress";
 import { domSearchSource } from "./search-source";
 import { basename, extensionOf, resolveLink } from "./paths";
@@ -193,6 +196,35 @@ async function main() {
     else if (pasted) await viewer.showText(pasted.text);
   };
 
+  const palette = new CommandPalette(byId("palette") as HTMLDialogElement, () => {
+    const ctx = { editing: editing.active };
+    const current = viewer.currentPath;
+    const commands: Item[] = availableCommands(ctx).map((c) => ({
+      key: `command:${c.id}`,
+      group: "Command",
+      title: c.title(ctx),
+      shortcut: c.shortcut,
+      run: () => actions[c.id]?.(),
+    }));
+    const files: Item[] = loadRecent()
+      .filter((path) => path !== current)
+      .map((path) => ({
+        key: `file:${path}`,
+        group: "File",
+        title: basename(path),
+        detail: describe(path).folder,
+        run: () => open_(path),
+      }));
+    const headings: Item[] = outline.headings.map((node, i) => ({
+      key: `heading:${i}`,
+      group: "Heading",
+      title: node.title,
+      detail: `H${node.level}`,
+      run: () => node.go(),
+    }));
+    return { commands, files, headings };
+  });
+
   const actions = menuActions({
     open: pick,
     reload: () => viewer.reload(),
@@ -216,6 +248,7 @@ async function main() {
     redo: () => editing.redo(),
     toggleAutosave: () => editing.toggleAutosave(),
     toggleSyncCursor: () => editing.toggleSyncCursor(),
+    openPalette: () => palette.open(),
   });
 
   const openPending = async () => {

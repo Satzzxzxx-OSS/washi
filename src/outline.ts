@@ -48,6 +48,11 @@ export class OutlinePanel implements OutlineSink {
     return !this.panel.hidden;
   }
 
+  /** いまの文書の見出し（コマンドパレットの「見出しへ移動」に使う） */
+  get headings(): readonly OutlineNode[] {
+    return this.nodes;
+  }
+
   show(visible: boolean) {
     this.panel.hidden = !visible;
     if (visible) this.spy();

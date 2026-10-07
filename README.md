@@ -33,6 +33,7 @@ brew upgrade --cask washi     # update
 | Action | Shortcut |
 |---|---|
 | Open / Reload / Print | `⌘O` / `⌘R` / `⌘P` |
+| Command palette | `⌘K` (commands, recent files, `#` for headings) |
 | Edit (split view) / Save | `⌘E` / `⌘S` |
 | Find (and replace, while editing) | `⌘F` (`Enter` next, `⇧Enter` previous, `Esc` close; shows "3 / 12") |
 | Toggle the outline | `⇧⌘O` |

@@ -41,6 +41,10 @@
     </form>
     <div id="toast" role="status" hidden></div>
     <pre id="error" hidden></pre>
+    <dialog id="palette" aria-label="Command palette">
+      <input type="text" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" placeholder="Type a command, a file, or #heading" autocomplete="off" spellcheck="false" />
+      <ul id="palette-list" role="listbox"></ul>
+    </dialog>
     <dialog id="confirm">
       <form method="dialog">
         <p></p>
